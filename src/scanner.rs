@@ -1,115 +1,7 @@
-use core::fmt;
 use std::collections::HashMap;
 
-pub fn is_digit(c: char) -> bool {
-    c >= '0' && c <= '9'
-}
-
-pub fn is_alpha(c: char) -> bool {
-    (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_'
-}
-
-pub fn is_alphanumeric(c: char) -> bool {
-    is_alpha(c) || is_digit(c)
-}
-
-#[derive(Debug, PartialEq, Eq, Clone)]
-pub enum TokenType {
-    // Single-character tokens.
-    LeftParen,
-    RightParen,
-    LeftBrace,
-    RightBrace,
-    Comma,
-    Dot,
-    Minus,
-    Plus,
-    Semicolon,
-    Slash,
-    Star,
-
-    // One or two character tokens.
-    Bang,
-    BangEqual,
-    Equal,
-    EqualEqual,
-    Greater,
-    GreaterEqual,
-    Less,
-    LessEqual,
-
-    // Literals.
-    Identifier,
-    StringLiteral,
-    NumberLiteral,
-
-    // Keywords.
-    And,
-    Class,
-    Else,
-    False,
-    Fun,
-    For,
-    If,
-    Nil,
-    Or,
-    Print,
-    Return,
-    Super,
-    This,
-    True,
-    Var,
-    While,
-
-    EOF,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-struct Literal(Option<f64>, Option<String>);
-
-impl Literal {
-    fn new() -> Self {
-        Literal(None, None)
-    }
-
-    fn new_number(number: f64) -> Self {
-        Literal(Some(number), None)
-    }
-
-    fn new_string(string: String) -> Self {
-        Literal(None, Some(string))
-    }
-}
-
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct Token {
-    token_type: TokenType,
-    lexeme: String,
-    literal: Literal,
-    line: i32,
-}
-
-impl Token {
-    fn new(token_type: TokenType, lexeme: String, literal: Literal, line: i32) -> Self {
-        Token {
-            token_type,
-            lexeme,
-            literal,
-            line
-        }
-    }
-}
-
-impl fmt::Display for Token {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(
-            f,
-            "Found {:?} (\"{}\") {:?} at {:?}",
-            self.token_type, self.lexeme, self.literal, self.line
-        )
-    }
-}
+use crate::token::{TokenType, Token, Literal};
+use crate::utils::{is_digit, is_alpha, is_alphanumeric};
 
 #[derive(Debug)]
 pub enum ScannerError {
@@ -400,8 +292,24 @@ mod tests {
         let tokens = scanner.tokenize().unwrap();
         tokens.iter().zip(&expected).for_each(|(a, b)| assert_eq!(a, b));
     }
+    
+    #[test]
+    fn string_assignment() {
+        let code = "var x = \"hallo\";\n".to_string();
+        let mut scanner = Scanner::new(&code);
 
+        let expected: Vec<Token> = [
+            Token::new(TokenType::Var, "var".to_string(), Literal::new(), 1),
+            Token::new(TokenType::Identifier, "x".to_string(), Literal::new(), 1),
+            Token::new(TokenType::Equal, "=".to_string(), Literal::new(), 1),
+            Token::new(TokenType::StringLiteral, "\"hallo\"".to_string(), Literal::new_string("hallo".to_string()), 1),
+            Token::new(TokenType::Semicolon, ";".to_string(), Literal::new(), 1),
+            Token::new(TokenType::EOF, "\n".to_string(), Literal::new(), 2),
+        ].into_iter().collect();
 
+        let tokens = scanner.tokenize().unwrap();
+        tokens.iter().zip(&expected).for_each(|(a, b)| assert_eq!(a, b));
+    }
 }
 
 

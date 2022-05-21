@@ -7,6 +7,9 @@ use std::io;
 mod scanner;
 use scanner::{Scanner, ScannerError};
 
+mod token;
+mod utils;
+
 fn main() -> std::io::Result<()> {
     let args: Vec<String> = env::args().collect();
 
