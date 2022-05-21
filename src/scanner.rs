@@ -1,11 +1,20 @@
 use core::fmt;
+use std::collections::HashMap;
 
 pub fn is_digit(c: char) -> bool {
     c >= '0' && c <= '9'
 }
 
+pub fn is_alpha(c: char) -> bool {
+    (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_'
+}
+
+pub fn is_alphanumeric(c: char) -> bool {
+    is_alpha(c) || is_digit(c)
+}
+
 #[derive(Debug, PartialEq, Eq, Clone)]
-enum TokenType {
+pub enum TokenType {
     // Single-character tokens.
     LeftParen,
     RightParen,
@@ -32,7 +41,7 @@ enum TokenType {
     // Literals.
     Identifier,
     StringLiteral,
-    Number,
+    NumberLiteral,
 
     // Keywords.
     And,
@@ -55,7 +64,7 @@ enum TokenType {
     EOF,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 struct Literal(Option<f64>, Option<String>);
 
 impl Literal {
@@ -72,27 +81,22 @@ impl Literal {
     }
 }
 
-#[derive(Debug, Clone)]
-struct Position {
-    line: i32,
-    column: i32,
-}
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Token {
     token_type: TokenType,
     lexeme: String,
     literal: Literal,
-    position: Position,
+    line: i32,
 }
 
 impl Token {
-    fn new(token_type: TokenType, lexeme: String, literal: Literal, position: Position) -> Self {
+    fn new(token_type: TokenType, lexeme: String, literal: Literal, line: i32) -> Self {
         Token {
             token_type,
             lexeme,
             literal,
-            position,
+            line
         }
     }
 }
@@ -101,8 +105,8 @@ impl fmt::Display for Token {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
             f,
-            "{:?} {} {:?} at {:?}",
-            self.token_type, self.lexeme, self.literal, self.position
+            "Found {:?} (\"{}\") {:?} at {:?}",
+            self.token_type, self.lexeme, self.literal, self.line
         )
     }
 }
@@ -112,7 +116,6 @@ pub enum ScannerError {
     Default,
     Error {
         line: i32,
-        column: i32,
         message: String,
     },
 }
@@ -122,10 +125,9 @@ impl ScannerError {
         match error {
             ScannerError::Error {
                 line,
-                column,
                 message,
             } => {
-                println!("{} at ({}:{})", message, line, column);
+                println!("{} at (line: {})", message, line);
             }
             _ => (),
         }
@@ -136,46 +138,60 @@ pub struct Scanner {
     error: ScannerError,
     source_code: String,
     tokens: Vec<Token>,
-    index: usize,
+    current: usize,
     start: usize,
     line: i32,
-    column: i32,
+    keywords: HashMap<String, TokenType>,
 }
 
 impl Scanner {
     pub fn new(source_code: &String) -> Self {
+        let keywords = HashMap::from([
+            ("and".to_string(), TokenType::And),
+            ("class".to_string(), TokenType::Class),
+            ("else".to_string(), TokenType::Else),
+            ("false".to_string(), TokenType::False),
+            ("for".to_string(), TokenType::For),
+            ("fun".to_string(), TokenType::Fun),
+            ("if".to_string(), TokenType::If),
+            ("nil".to_string(), TokenType::Nil),
+            ("or".to_string(), TokenType::Or),
+            ("print".to_string(), TokenType::Print),
+            ("return".to_string(), TokenType::Return),
+            ("super".to_string(), TokenType::Super),
+            ("this".to_string(), TokenType::This),
+            ("true".to_string(), TokenType::True),
+            ("var".to_string(), TokenType::Var),
+            ("while".to_string(), TokenType::While),
+        ]);
         Scanner {
             error: ScannerError::Default,
             tokens: Vec::<Token>::new(),
             source_code: source_code.clone(),
-            index: 0,
+            current: 0,
             start: 0,
-            line: 0,
-            column: 0,
+            line: 1,
+            keywords,
         }
     }
 
     fn is_at_end(&mut self) -> bool {
-        self.index >= self.source_code.len()
+        self.current >= self.source_code.len()
     }
 
     fn advance(&mut self) -> char {
-        let c = self.source_code.chars().nth(self.index).unwrap();
-        self.index += 1;
-        self.column += 1;
+        let c = self.source_code.chars().nth(self.current).unwrap();
+        self.current += 1;
         return c;
     }
 
     fn add_token(&mut self, token_type: TokenType, literal: Option<Literal>) {
-        let lexeme = &self.source_code[self.start..self.index];
+        let lexeme = &self.source_code[self.start..self.current];
         self.tokens.push(Token::new(
             token_type,
             lexeme.to_string(),
             literal.unwrap_or(Literal::new()),
-            Position {
-                line: self.line,
-                column: self.column,
-            },
+            self.line
         ));
     }
 
@@ -188,13 +204,11 @@ impl Scanner {
             return false;
         }
 
-        if self.source_code.chars().nth(self.index).unwrap() != expected {
+        if self.source_code.chars().nth(self.current).unwrap() != expected {
             return false;
         }
 
-        self.index += 1;
-        self.column += 1;
-
+        self.current += 1;
         true
     }
 
@@ -202,19 +216,18 @@ impl Scanner {
         if self.is_at_end() {
             return '\0';
         }
-        return self.source_code.chars().nth(self.index).unwrap();
+        return self.source_code.chars().nth(self.current).unwrap();
     }
 
     fn peek_next(&mut self) -> char {
-        if self.index + 1 >= self.source_code.len() {
+        if self.current + 1 >= self.source_code.len() {
             return '\0';
         }
-        self.source_code.chars().nth(self.index + 1).unwrap()
+        self.source_code.chars().nth(self.current + 1).unwrap()
     }
 
     fn new_line(&mut self) {
         self.line += 1;
-        self.column = 1;
     }
 
     fn string(&mut self) {
@@ -228,7 +241,6 @@ impl Scanner {
         if self.is_at_end() {
             self.error = ScannerError::Error {
                 line: self.line,
-                column: self.column,
                 message: "Unterminated String.".to_string(),
             };
             return;
@@ -236,7 +248,7 @@ impl Scanner {
 
         self.advance();
 
-        let literal: String = self.source_code[self.start + 1..self.index - 1].to_string();
+        let literal = self.source_code[(self.start + 1)..(self.current - 1)].to_string();
         self.add_token(
             TokenType::StringLiteral,
             Some(Literal::new_string(literal.to_string().clone())),
@@ -254,95 +266,158 @@ impl Scanner {
                 self.advance();
             }
         }
-        let literal: f64 = self.source_code[self.start + 1..self.index - 1].to_string().parse().unwrap();
-        self.add_token(
-            TokenType::StringLiteral,
-            Some(Literal::new_number(literal)),
-        );
+        let literal: f64 = self.source_code[self.start..self.current]
+            .to_string()
+            .parse()
+            .unwrap();
+        self.add_token(TokenType::NumberLiteral, Some(Literal::new_number(literal)));
     }
 
+    fn identifier(&mut self) {
+        while is_alphanumeric(self.peek()) {
+            self.advance();
+        }
 
-    pub fn tokenize(&mut self) -> Result<Vec<Token>, ScannerError> {
-        let emit_token = |token_type: TokenType| {
-            let lexeme = &self.source_code[self.start..self.index];
-        };
+        let text = &self.source_code[self.start..self.current];
+        let token_type = self
+            .keywords
+            .get(text)
+            .unwrap_or(&TokenType::Identifier)
+            .clone();
+        self.add_token_single(token_type);
+    }
 
-        while !self.is_at_end() {
-            self.start = self.index;
-            match self.advance() {
-                '(' => self.add_token_single(TokenType::LeftParen),
-                ')' => self.add_token_single(TokenType::RightParen),
-                '{' => self.add_token_single(TokenType::LeftBrace),
-                '}' => self.add_token_single(TokenType::RightBrace),
-                ',' => self.add_token_single(TokenType::Comma),
-                '.' => self.add_token_single(TokenType::Dot),
-                '-' => self.add_token_single(TokenType::Minus),
-                '+' => self.add_token_single(TokenType::Plus),
-                ';' => self.add_token_single(TokenType::Semicolon),
-                '*' => self.add_token_single(TokenType::Star),
-                '!' => {
-                    if self.expect('=') {
-                        self.add_token_single(TokenType::BangEqual)
-                    } else {
-                        self.add_token_single(TokenType::Bang)
-                    }
-                }
-                '=' => {
-                    if self.expect('=') {
-                        self.add_token_single(TokenType::EqualEqual)
-                    } else {
-                        self.add_token_single(TokenType::Equal)
-                    }
-                }
-                '<' => {
-                    if self.expect('=') {
-                        self.add_token_single(TokenType::LessEqual)
-                    } else {
-                        self.add_token_single(TokenType::Less)
-                    }
-                }
-                '>' => {
-                    if self.expect('=') {
-                        self.add_token_single(TokenType::GreaterEqual)
-                    } else {
-                        self.add_token_single(TokenType::Greater)
-                    }
-                }
-                '/' => {
-                    if self.expect('/') {
-                        while self.peek() != '\n' && !self.is_at_end() {
-                            self.advance();
-                        }
-                    } else {
-                        self.add_token_single(TokenType::Slash)
-                    }
-                }
+    fn scan_token(&mut self) {
+        let c: char = self.advance();
 
-                ' ' | '\t' | '\r' => {}
-
-                '\n' => {
-                    self.new_line();
+        match c {
+            '(' => self.add_token_single(TokenType::LeftParen),
+            ')' => self.add_token_single(TokenType::RightParen),
+            '{' => self.add_token_single(TokenType::LeftBrace),
+            '}' => self.add_token_single(TokenType::RightBrace),
+            ',' => self.add_token_single(TokenType::Comma),
+            '.' => self.add_token_single(TokenType::Dot),
+            '-' => self.add_token_single(TokenType::Minus),
+            '+' => self.add_token_single(TokenType::Plus),
+            ';' => self.add_token_single(TokenType::Semicolon),
+            '*' => self.add_token_single(TokenType::Star),
+            '!' => {
+                if self.expect('=') {
+                    self.add_token_single(TokenType::BangEqual)
+                } else {
+                    self.add_token_single(TokenType::Bang)
                 }
-
-                '\"' => {
-                    self.string();
+            }
+            '=' => {
+                if self.expect('=') {
+                    self.add_token_single(TokenType::EqualEqual)
+                } else {
+                    self.add_token_single(TokenType::Equal)
                 }
-
-                _ => {
-                    if is_digit(self.source_code.chars().nth(self.index).unwrap()) {
-                        self.number();
-                        break;
+            }
+            '<' => {
+                if self.expect('=') {
+                    self.add_token_single(TokenType::LessEqual)
+                } else {
+                    self.add_token_single(TokenType::Less)
+                }
+            }
+            '>' => {
+                if self.expect('=') {
+                    self.add_token_single(TokenType::GreaterEqual)
+                } else {
+                    self.add_token_single(TokenType::Greater)
+                }
+            }
+            '/' => {
+                if self.expect('/') {
+                    while self.peek() != '\n' && !self.is_at_end() {
+                        self.advance();
                     }
-                    
+                } else {
+                    self.add_token_single(TokenType::Slash)
+                }
+            }
+
+            ' ' | '\t' | '\r' => {}
+
+            '\n' => {
+                self.new_line();
+            }
+
+            '\"' => {
+                self.string();
+            }
+
+            _ => {
+                if is_digit(c) {
+                    self.number();
+                } else if is_alpha(c) {
+                    self.identifier();
+                } else {
                     self.error = ScannerError::Error {
                         line: self.line,
-                        column: self.column,
                         message: "Unexpected Character.".to_string(),
                     };
-                    break;
                 }
             }
         }
+    }
+
+    pub fn tokenize(&mut self) -> Result<Vec<Token>, ScannerError> {
+        let emit_token = |token_type: TokenType| {
+            let lexeme = &self.source_code[self.start..self.current];
+        };
+
+        while !self.is_at_end() {
+            self.start = self.current;
+            self.scan_token();
+        }
+
+        self.add_token_single(TokenType::EOF);
         Ok(self.tokens.clone())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn number_assignment() {
+        let code = "var x = 10;\n".to_string();
+        let mut scanner = Scanner::new(&code);
+
+        let expected: Vec<Token> = [
+            Token::new(TokenType::Var, "var".to_string(), Literal::new(), 1),
+            Token::new(TokenType::Identifier, "x".to_string(), Literal::new(), 1),
+            Token::new(TokenType::Equal, "=".to_string(), Literal::new(), 1),
+            Token::new(TokenType::NumberLiteral, "10".to_string(), Literal::new_number(10 as f64), 1),
+            Token::new(TokenType::Semicolon, ";".to_string(), Literal::new(), 1),
+            Token::new(TokenType::EOF, "\n".to_string(), Literal::new(), 2),
+        ].into_iter().collect();
+
+        let tokens = scanner.tokenize().unwrap();
+        tokens.iter().zip(&expected).for_each(|(a, b)| assert_eq!(a, b));
+    }
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

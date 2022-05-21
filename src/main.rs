@@ -1,4 +1,5 @@
 #![allow(unused_variables, dead_code)]
+use std::io::Write;
 use std::env;
 use std::fs;
 use std::io;
@@ -30,10 +31,11 @@ fn run_file(path: &String) -> io::Result<()> {
 }
 
 fn run_repl() -> io::Result<()> {
+    let mut line = String::new();
     loop {
         print!("> ");
-        let mut line = String::new();
-        io::stdin().read_line(&mut line)?;
+        io::stdout().flush().unwrap();
+        io::stdin().read_line(&mut line).unwrap();
         run(&line);
     }
 }
@@ -47,4 +49,8 @@ fn run(source_code: &String) {
             vec![]
         }
     };
+
+    for token in tokens {
+        println!("{}", token);
+    }
 }
