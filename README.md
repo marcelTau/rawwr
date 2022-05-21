@@ -1,5 +1,7 @@
 
-[Current Chapter](https://craftinginterpreters.com/scanning.html#location-information): Location Information 
+[Current Chapter](https://craftinginterpreters.com/scanning.html#reserved-words-and-identifiers): reserved-words-and-identifiers
+
+
 
 
 ## Terms
