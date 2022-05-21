@@ -78,7 +78,10 @@ impl Scanner {
     }
 
     fn add_token(&mut self, token_type: TokenType, literal: Option<Literal>) {
-        let lexeme = &self.source_code[self.start..self.current];
+        let mut lexeme = &self.source_code[self.start..self.current];
+        if token_type == TokenType::EOF {
+            lexeme = "";
+        }
         self.tokens.push(Token::new(
             token_type,
             lexeme.to_string(),
@@ -171,12 +174,19 @@ impl Scanner {
         }
 
         let text = &self.source_code[self.start..self.current];
+        println!("TEXT: #{}#", text);
         let token_type = self
             .keywords
             .get(text)
             .unwrap_or(&TokenType::Identifier)
             .clone();
-        self.add_token_single(token_type);
+
+        match token_type {
+            TokenType::True => self.add_token(TokenType::True, Some(Literal::new_bool(true))),
+            TokenType::False => self.add_token(TokenType::False, Some(Literal::new_bool(false))),
+            TokenType::Nil => self.add_token(TokenType::Nil, Some(Literal::new_nil())),
+            _ => self.add_token_single(token_type)
+        }
     }
 
     fn scan_token(&mut self) {
@@ -300,7 +310,7 @@ mod tests {
             Token::new(TokenType::Equal, "=".to_string(), Literal::new(), 1),
             Token::new(TokenType::NumberLiteral, "10".to_string(), Literal::new_number(10 as f64), 1),
             Token::new(TokenType::Semicolon, ";".to_string(), Literal::new(), 1),
-            Token::new(TokenType::EOF, "\n".to_string(), Literal::new(), 2),
+            Token::new(TokenType::EOF, "".to_string(), Literal::new(), 2),
         ].into_iter().collect();
 
         let tokens = scanner.tokenize().unwrap();
@@ -318,7 +328,24 @@ mod tests {
             Token::new(TokenType::Equal, "=".to_string(), Literal::new(), 1),
             Token::new(TokenType::StringLiteral, "\"hallo\"".to_string(), Literal::new_string("hallo".to_string()), 1),
             Token::new(TokenType::Semicolon, ";".to_string(), Literal::new(), 1),
-            Token::new(TokenType::EOF, "\n".to_string(), Literal::new(), 2),
+            Token::new(TokenType::EOF, "".to_string(), Literal::new(), 2),
+        ].into_iter().collect();
+
+        let tokens = scanner.tokenize().unwrap();
+        tokens.iter().zip(&expected).for_each(|(a, b)| assert_eq!(a, b));
+    }
+    #[test]
+    fn bool_assignment() {
+        let code = "var x = true;\n".to_string();
+        let mut scanner = Scanner::new(&code);
+
+        let expected: Vec<Token> = [
+            Token::new(TokenType::Var, "var".to_string(), Literal::new(), 1),
+            Token::new(TokenType::Identifier, "x".to_string(), Literal::new(), 1),
+            Token::new(TokenType::Equal, "=".to_string(), Literal::new(), 1),
+            Token::new(TokenType::True, "true".to_string(), Literal::new_bool(true), 1),
+            Token::new(TokenType::Semicolon, ";".to_string(), Literal::new(), 1),
+            Token::new(TokenType::EOF, "".to_string(), Literal::new(), 2),
         ].into_iter().collect();
 
         let tokens = scanner.tokenize().unwrap();
