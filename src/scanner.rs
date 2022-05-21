@@ -226,6 +226,13 @@ impl Scanner {
                     while self.peek() != '\n' && !self.is_at_end() {
                         self.advance();
                     }
+                } else if self.expect('*') {
+                    while self.peek() != '*' && self.peek_next() != '/' {
+                        self.advance();
+                    }
+                    // skip the */
+                    self.advance();
+                    self.advance();
                 } else {
                     self.add_token_single(TokenType::Slash)
                 }
