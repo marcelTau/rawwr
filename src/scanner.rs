@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use crate::token::{TokenType, Token, Literal};
 use crate::utils::{is_digit, is_alpha, is_alphanumeric};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum ScannerError {
     Default,
     Error {
@@ -13,7 +13,7 @@ pub enum ScannerError {
 }
 
 impl ScannerError {
-    pub fn report(error: ScannerError) -> () {
+    pub fn report(error: &ScannerError) -> () {
         match error {
             ScannerError::Error {
                 line,
@@ -264,6 +264,13 @@ impl Scanner {
         while !self.is_at_end() {
             self.start = self.current;
             self.scan_token();
+
+            match &self.error {
+                ScannerError::Error { .. } => {
+                    return Err(self.error.clone());
+                }
+                _ => ()
+            }
         }
 
         self.add_token_single(TokenType::EOF);
@@ -292,7 +299,7 @@ mod tests {
         let tokens = scanner.tokenize().unwrap();
         tokens.iter().zip(&expected).for_each(|(a, b)| assert_eq!(a, b));
     }
-    
+
     #[test]
     fn string_assignment() {
         let code = "var x = \"hallo\";\n".to_string();

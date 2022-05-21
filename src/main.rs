@@ -48,7 +48,7 @@ fn run(source_code: &String) {
     let tokens = match scanner.tokenize() {
         Ok(tokens) => tokens,
         Err(err) => {
-            ScannerError::report(err);
+            ScannerError::report(&err);
             vec![]
         }
     };
