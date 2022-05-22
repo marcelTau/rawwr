@@ -77,6 +77,10 @@ impl Literal {
     pub fn new_nil() -> Self {
         Literal(None, None, None, Some(IsNil(true)))
     }
+
+    pub fn as_string(&self) -> String {
+        format!("{}", self)
+    }
 }
 
 impl fmt::Display for Literal {
@@ -85,7 +89,8 @@ impl fmt::Display for Literal {
             Literal(Some(x), ..) => x.to_string(),
             Literal(None, Some(x), ..) => x.to_string(),
             Literal(None, None, Some(x), ..) => x.to_string(),
-            Literal(None, None, None, Some(x)) => x.0.to_string(),
+            //Literal(None, None, None, Some(x)) => x.0.to_string(), //@todo is this actually "nil"
+            Literal(None, None, None, Some(x)) => if x.0 { "nil".to_string() } else { "".to_string() },
             _ => "unimplemented".to_string(),
         };
 
@@ -96,7 +101,7 @@ impl fmt::Display for Literal {
 #[derive(Debug, Clone, PartialEq)]
 pub struct Token {
     token_type: TokenType,
-    lexeme: String,
+    pub lexeme: String,
     literal: Literal,
     line: i32,
 }

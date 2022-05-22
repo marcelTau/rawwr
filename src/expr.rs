@@ -10,23 +10,33 @@ pub enum Expr {
     Unary(UnaryExpr),
 }
 
+impl Expr {
+    pub fn accept<T>(&self, visitor: &dyn ExprVisitor<T>) -> Result<T, ScannerError> {
+        match self {
+            Expr::Binary(x) => x.accept(visitor),
+            Expr::Grouping(x) => x.accept(visitor),
+            Expr::Literal(x) => x.accept(visitor),
+            Expr::Unary(x) => x.accept(visitor),
+        }
+    }
+}
 pub struct BinaryExpr {
-    left: Box<Expr>,
-    operator: Token,
-    right: Box<Expr>,
+    pub left: Box<Expr>,
+    pub operator: Token,
+    pub right: Box<Expr>,
 }
 
 pub struct GroupingExpr {
-    expression: Box<Expr>,
+    pub expression: Box<Expr>,
 }
 
 pub struct LiteralExpr {
-    value: Box<Literal>,
+    pub value: Literal,
 }
 
 pub struct UnaryExpr {
-    operator: Token,
-    right: Box<Expr>,
+    pub operator: Token,
+    pub right: Box<Expr>,
 }
 
 pub trait ExprVisitor<T> {
@@ -37,25 +47,25 @@ pub trait ExprVisitor<T> {
 }
 
 impl BinaryExpr {
-    fn accept<T>(&self, visitor: &dyn ExprVisitor<T>) -> Result<T, ScannerError> {
+    pub fn accept<T>(&self, visitor: &dyn ExprVisitor<T>) -> Result<T, ScannerError> {
         visitor.visit_binary_expr(self)
     }
 }
 
 impl GroupingExpr {
-    fn accept<T>(&self, visitor: &dyn ExprVisitor<T>) -> Result<T, ScannerError> {
+    pub fn accept<T>(&self, visitor: &dyn ExprVisitor<T>) -> Result<T, ScannerError> {
         visitor.visit_grouping_expr(self)
     }
 }
 
 impl LiteralExpr {
-    fn accept<T>(&self, visitor: &dyn ExprVisitor<T>) -> Result<T, ScannerError> {
+    pub fn accept<T>(&self, visitor: &dyn ExprVisitor<T>) -> Result<T, ScannerError> {
         visitor.visit_literal_expr(self)
     }
 }
 
 impl UnaryExpr {
-    fn accept<T>(&self, visitor: &dyn ExprVisitor<T>) -> Result<T, ScannerError> {
+    pub fn accept<T>(&self, visitor: &dyn ExprVisitor<T>) -> Result<T, ScannerError> {
         visitor.visit_unary_expr(self)
     }
 }

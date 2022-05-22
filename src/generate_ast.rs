@@ -38,11 +38,29 @@ pub fn generate_ast(
     }
     writeln!(file, "}}\n")?;
 
+    writeln!(file, "impl {} {{", base_name)?;
+    writeln!(
+        file,
+        "    pub fn accept<T>(&self, visitor: &dyn {}Visitor<T>) -> Result<T, ScannerError> {{",
+        base_name
+    )?;
+    writeln!(file, "        match self {{")?;
+    for t in &ttypes {
+        writeln!(
+            file,
+            "            {}::{}(x) => x.accept(visitor),",
+            base_name, t.base_name
+        )?;
+    }
+    writeln!(file, "        }}")?;
+    writeln!(file, "    }}")?;
+    writeln!(file, "}}")?;
+
     for t in &ttypes {
         writeln!(file, "pub struct {}{} {{", t.base_name, base_name)?;
         for field in t.fields.split(',') {
             let (rust_type, name) = field.trim().split_once(' ').unwrap();
-            writeln!(file, "    {}: {},", name, rust_type)?;
+            writeln!(file, "    pub {}: {},", name, rust_type)?;
         }
         writeln!(file, "}}\n")?;
     }
@@ -63,8 +81,16 @@ pub fn generate_ast(
 
     for t in &ttypes {
         writeln!(file, "impl {}{} {{", t.base_name, base_name)?;
-        writeln!(file, "    fn accept<T>(&self, visitor: &dyn {}Visitor<T>) -> Result<T, ScannerError> {{", base_name)?;
-        writeln!(file, "        visitor.visit_{}_expr(self)", t.base_name.to_lowercase())?;
+        writeln!(
+            file,
+            "    pub fn accept<T>(&self, visitor: &dyn {}Visitor<T>) -> Result<T, ScannerError> {{",
+            base_name
+        )?;
+        writeln!(
+            file,
+            "        visitor.visit_{}_expr(self)",
+            t.base_name.to_lowercase()
+        )?;
         writeln!(file, "    }}")?;
         writeln!(file, "}}\n")?;
     }
