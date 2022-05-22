@@ -17,6 +17,22 @@ impl Parser {
         }
     }
 
+    //pub fn parse(&mut self) -> Result<Expr, ()> {
+        //match self.expression() {
+            //Ok(expr) => Ok(expr),
+            //Err(err) => {
+                //ScannerError::report(&err);
+                //Err(())
+            //}
+        //}
+    //}
+
+    pub fn parse(&mut self) -> Option<Expr> {
+        match self.expression() {
+            Ok(expr) => Some(expr),
+            Err(_) => None,
+        }
+    }
     fn is_match(&mut self, token_types: &Vec<TokenType>) -> bool {
         for t in token_types {
             if self.check(t) {
@@ -35,7 +51,7 @@ impl Parser {
     }
 
     fn peek(&self) -> Token {
-        self.tokens[self.current + 1].clone()
+        self.tokens[self.current].clone()
     }
 
     fn is_at_end(&self) -> bool {
@@ -45,19 +61,21 @@ impl Parser {
     fn advance(&mut self) -> Token {
         if !self.is_at_end() {
             self.current += 1;
+            println!("ADVANCING: current = {}", self.current);
         }
         self.previous()
     }
 
     fn previous(&self) -> Token {
-        self.tokens[self.current - 1].clone()
+        self.tokens.get(self.current - 1).unwrap().clone()
     }
 
-    fn error(&mut self, error: &ScannerError) {
+    fn error(&mut self, error: &ScannerError) -> ScannerError {
         self.error = error.clone();
         // @todo this should be done in the synchronize method
         //       don't forget to reset it
         ScannerError::report(error);
+        error.clone()
     }
 
     fn synchronize(&mut self) {
@@ -85,8 +103,7 @@ impl Parser {
                 line: self.peek().line,
                 message
             };
-            self.error(&err);
-            Err(err)
+            Err(self.error(&err))
         }
     }
 
@@ -98,6 +115,7 @@ impl Parser {
 
     fn equality(&mut self) -> Result<Expr, ScannerError> {
         let mut expr = self.comparison()?;
+        println!("Equality");
         while self.is_match(&vec![TokenType::BangEqual, TokenType::EqualEqual]) {
             let operator = self.previous();
             let right = self.comparison()?;
@@ -113,6 +131,7 @@ impl Parser {
 
     fn comparison(&mut self) -> Result<Expr, ScannerError> {
         let mut expr = self.term()?;
+        println!("Comparison");
         while self.is_match(&vec![
             TokenType::Greater,
             TokenType::GreaterEqual,
@@ -134,6 +153,7 @@ impl Parser {
     fn term(&mut self) -> Result<Expr, ScannerError> {
         let mut expr = self.factor()?;
 
+        println!("Term");
         while self.is_match(&vec![TokenType::Minus, TokenType::Plus]) {
             let operator = self.previous();
             let right = self.factor()?;
@@ -148,7 +168,7 @@ impl Parser {
 
     fn factor(&mut self) -> Result<Expr, ScannerError> {
         let mut expr = self.unary()?;
-
+        println!("Factor");
         while self.is_match(&vec![TokenType::Star, TokenType::Slash]) {
             let operator = self.previous();
             let right = self.unary()?;
@@ -163,6 +183,7 @@ impl Parser {
     }
 
     fn unary(&mut self) -> Result<Expr, ScannerError> {
+        println!("Unary: {}", self.is_match(&vec![TokenType::Bang, TokenType::Minus]).to_string());
         if self.is_match(&vec![TokenType::Bang, TokenType::Minus]) {
             let operator = self.previous();
             let right = self.unary()?;
@@ -176,6 +197,7 @@ impl Parser {
     }
 
     fn primary(&mut self) -> Result<Expr, ScannerError> {
+        println!("Primary: Found type {}", self.tokens[self.current]);
         match self.tokens[self.current].token_type {
             TokenType::False => Ok(Expr::Literal(LiteralExpr {
                 value: Literal::new_bool(false),
@@ -199,7 +221,10 @@ impl Parser {
                     expression: Box::new(expr),
                 }))
             }
-            _ => unreachable!(),
+            _ => Err(self.error(&ScannerError::Error {
+                line: self.tokens[self.current].line,
+                message: "Expect expression.".to_string()
+            }))
         }
     }
 }

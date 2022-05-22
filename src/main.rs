@@ -12,8 +12,9 @@ use scanner::{Scanner, ScannerError};
 //use generate_ast::generate_ast;
 
 mod parser;
+use parser::*;
 mod ast_printer;
-//use ast_printer::*;
+use ast_printer::*;
 mod token;
 //use token::*;
 mod utils;
@@ -92,7 +93,16 @@ fn run(source_code: &String) {
         }
     };
 
-    for token in tokens {
-        println!("{}", token);
+    for t in &tokens {
+        println!("token: {}", t);
     }
+
+    let mut parser = Parser::new(tokens);
+    let printer = AstPrinter {};
+
+    match parser.parse() {
+        None => (),
+        Some(expr) => println!("{}", printer.print(&expr).unwrap()),
+    }
+
 }

@@ -7,6 +7,7 @@ impl AstPrinter {
     pub fn print(&self, expr: &Expr) -> Result<String, ScannerError> {
         expr.accept(self)
     }
+
     fn parenthesize(&self, name: &String, exprs: &[&Box<Expr>]) -> Result<String, ScannerError> {
         let mut builder = format!("({name}");
         for expr in exprs {
@@ -34,5 +35,4 @@ impl ExprVisitor<String> for AstPrinter {
     fn visit_unary_expr(&self, expr: &UnaryExpr) -> Result<String, ScannerError> {
         self.parenthesize(&expr.operator.lexeme, &vec![&expr.right])
     }
-
 }
