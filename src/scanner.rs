@@ -174,7 +174,6 @@ impl Scanner {
         }
 
         let text = &self.source_code[self.start..self.current];
-        println!("TEXT: #{}#", text);
         let token_type = self
             .keywords
             .get(text)
