@@ -52,8 +52,6 @@ fn main() -> std::io::Result<()> {
 
     //let p = AstPrinter;
     //println!("expression: {}", p.print(&expression).unwrap());
-
-
     //std::process::exit(0);
     let args: Vec<String> = env::args().collect();
 

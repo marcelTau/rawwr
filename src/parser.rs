@@ -2,7 +2,6 @@ use crate::expr::*;
 use crate::error::*;
 use crate::token::*;
 use crate::object::*;
-use crate::scanner::*;
 
 pub struct Parser {
     tokens: Vec<Token>,
@@ -236,6 +235,7 @@ impl Parser {
 mod tests {
     use super::*;
     use crate::ast_printer::AstPrinter;
+    use crate::scanner::*;
 
     fn run(code: &String) -> String {
         let mut scanner = Scanner::new(code);

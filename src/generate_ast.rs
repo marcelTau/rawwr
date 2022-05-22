@@ -1,5 +1,3 @@
-use crate::token::*;
-
 use std::fs::File;
 use std::io::Write;
 
@@ -20,8 +18,8 @@ pub fn generate_ast(
     writeln!(file, "/// Don't modify it")?;
 
     writeln!(file, "use crate::token::*;")?;
-    writeln!(file, "use crate::scanner::*;")?;
     writeln!(file, "use crate::object::*;")?;
+    writeln!(file, "use crate::error::*;")?;
 
     let mut ttypes: Vec<Type> = vec![];
 
