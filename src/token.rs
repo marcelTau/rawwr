@@ -100,9 +100,9 @@ impl fmt::Display for Literal {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Token {
-    token_type: TokenType,
+    pub token_type: TokenType,
     pub lexeme: String,
-    literal: Literal,
+    pub literal: Literal,
     line: i32,
 }
 

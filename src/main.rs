@@ -11,13 +11,14 @@ use scanner::{Scanner, ScannerError};
 //mod generate_ast;
 //use generate_ast::generate_ast;
 
+mod parser;
 mod ast_printer;
-use ast_printer::*;
+//use ast_printer::*;
 mod token;
-use token::*;
+//use token::*;
 mod utils;
 mod expr;
-use expr::*;
+//use expr::*;
 
 fn main() -> std::io::Result<()> {
     //generate_ast("./src".to_string(), "Expr".to_string(), &vec![
@@ -27,29 +28,28 @@ fn main() -> std::io::Result<()> {
       //"Unary    : Token operator, Box<Expr> right".to_string()
     //])?;
 
+    //let expression = Expr::Binary (
+        //BinaryExpr { 
+            //left: Box::new(Expr::Unary(UnaryExpr {
+                //operator: Token::new(TokenType::Minus, "-".to_string(), Literal::new(), 1),
+                //right: Box::new(Expr::Literal(LiteralExpr {
+                    //value: Literal::new_number(123 as f64),
+                //}))
+            //})),
+            //operator: Token::new(TokenType::Star, "*".to_string(), Literal::new(), 1),
+            //right: Box::new(Expr::Grouping(GroupingExpr {
+                //expression: Box::new(Expr::Literal(LiteralExpr {
+                    //value: Literal::new_number(45.67),
+                //}))
+            //})),
+        //}
+    //);
 
-    let expression = Expr::Binary (
-        BinaryExpr { 
-            left: Box::new(Expr::Unary(UnaryExpr {
-                operator: Token::new(TokenType::Minus, "-".to_string(), Literal::new(), 1),
-                right: Box::new(Expr::Literal(LiteralExpr {
-                    value: Literal::new_number(123 as f64),
-                }))
-            })),
-            operator: Token::new(TokenType::Star, "*".to_string(), Literal::new(), 1),
-            right: Box::new(Expr::Grouping(GroupingExpr {
-                expression: Box::new(Expr::Literal(LiteralExpr {
-                    value: Literal::new_number(45.67),
-                }))
-            })),
-        }
-    );
-
-    let p = AstPrinter;
-    println!("expression: {}", p.print(&expression).unwrap());
+    //let p = AstPrinter;
+    //println!("expression: {}", p.print(&expression).unwrap());
 
 
-    std::process::exit(0);
+    //std::process::exit(0);
     let args: Vec<String> = env::args().collect();
 
     if args.len() > 2 {
