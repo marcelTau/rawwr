@@ -15,7 +15,7 @@ impl Parser {
         }
     }
 
-    fn is_match(&mut self, token_types: Vec<TokenType>) -> bool {
+    fn is_match(&mut self, token_types: &Vec<TokenType>) -> bool {
         for t in token_types {
             if self.check(t) {
                 self.advance();
@@ -25,15 +25,15 @@ impl Parser {
         false
     }
 
-    fn check(&self, token_type: TokenType) -> bool {
+    fn check(&self, token_type: &TokenType) -> bool {
         if self.is_at_end() {
             return false;
         }
-        self.peek().token_type == token_type
+        self.peek().token_type == *token_type
     }
 
     fn peek(&self) -> Token {
-        self.tokens[self.current + 1]
+        self.tokens[self.current + 1].clone()
     }
 
     fn is_at_end(&self) -> bool {
@@ -48,11 +48,24 @@ impl Parser {
     }
 
     fn previous(&self) -> Token {
-        self.tokens[self.current - 1]
+        self.tokens[self.current - 1].clone()
     }
 
-    fn consume(&self, token_type: &TokenType, message: String) {
+    fn error(&self, error: &ScannerError) {
+        ScannerError::report(error);
+    }
 
+    fn consume(&mut self, token_type: &TokenType, message: String) -> Result<Token, ScannerError> {
+        if self.check(token_type) {
+            Ok(self.advance())
+        } else {
+            let err = ScannerError::Error {
+                line: self.peek().line,
+                message
+            };
+            self.error(&err);
+            Err(err)
+        }
     }
 
     // ------------------------------------------------------------------------
@@ -63,7 +76,7 @@ impl Parser {
 
     fn equality(&mut self) -> Result<Expr, ScannerError> {
         let mut expr = self.comparison()?;
-        while self.is_match(vec![TokenType::BangEqual, TokenType::EqualEqual]) {
+        while self.is_match(&vec![TokenType::BangEqual, TokenType::EqualEqual]) {
             let operator = self.previous();
             let right = self.comparison()?;
             expr = Expr::Binary(BinaryExpr {
@@ -76,9 +89,9 @@ impl Parser {
         Ok(expr)
     }
 
-    fn comparison(&self) -> Result<Expr, ScannerError> {
+    fn comparison(&mut self) -> Result<Expr, ScannerError> {
         let mut expr = self.term()?;
-        while self.is_match(vec![
+        while self.is_match(&vec![
             TokenType::Greater,
             TokenType::GreaterEqual,
             TokenType::Less,
@@ -96,10 +109,10 @@ impl Parser {
         Ok(expr)
     }
 
-    fn term(&self) -> Result<Expr, ScannerError> {
+    fn term(&mut self) -> Result<Expr, ScannerError> {
         let mut expr = self.factor()?;
 
-        while self.is_match(vec![TokenType::Minus, TokenType::Plus]) {
+        while self.is_match(&vec![TokenType::Minus, TokenType::Plus]) {
             let operator = self.previous();
             let right = self.factor()?;
             expr = Expr::Binary(BinaryExpr {
@@ -111,10 +124,10 @@ impl Parser {
         Ok(expr)
     }
 
-    fn factor(&self) -> Result<Expr, ScannerError> {
+    fn factor(&mut self) -> Result<Expr, ScannerError> {
         let mut expr = self.unary()?;
 
-        while self.is_match(vec![TokenType::Star, TokenType::Slash]) {
+        while self.is_match(&vec![TokenType::Star, TokenType::Slash]) {
             let operator = self.previous();
             let right = self.unary()?;
             expr = Expr::Binary(BinaryExpr {
@@ -127,8 +140,8 @@ impl Parser {
         Ok(expr)
     }
 
-    fn unary(&self) -> Result<Expr, ScannerError> {
-        if self.is_match(vec![TokenType::Bang, TokenType::Minus]) {
+    fn unary(&mut self) -> Result<Expr, ScannerError> {
+        if self.is_match(&vec![TokenType::Bang, TokenType::Minus]) {
             let operator = self.previous();
             let right = self.unary()?;
             Ok(Expr::Unary(UnaryExpr {
@@ -140,7 +153,7 @@ impl Parser {
         }
     }
 
-    fn primary(&self) -> Result<Expr, ScannerError> {
+    fn primary(&mut self) -> Result<Expr, ScannerError> {
         match self.tokens[self.current].token_type {
             TokenType::False => Ok(Expr::Literal(LiteralExpr {
                 value: Literal::new_bool(false),
@@ -159,7 +172,7 @@ impl Parser {
             })),
             TokenType::LeftParen => {
                 let expr = self.expression()?;
-                self.consume(&TokenType::RightParen, "Expect ')' after expression.".to_string());
+                self.consume(&TokenType::RightParen, "Expect ')' after expression.".to_string())?;
                 Ok(Expr::Grouping(GroupingExpr {
                     expression: Box::new(expr),
                 }))
