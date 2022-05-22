@@ -5,6 +5,7 @@ use crate::token::*;
 pub struct Parser {
     tokens: Vec<Token>,
     current: usize,
+    error: ScannerError,
 }
 
 impl Parser {
@@ -12,6 +13,7 @@ impl Parser {
         Parser {
             tokens: tokens.clone(),
             current: 0,
+            error: ScannerError::Default,
         }
     }
 
@@ -51,8 +53,28 @@ impl Parser {
         self.tokens[self.current - 1].clone()
     }
 
-    fn error(&self, error: &ScannerError) {
+    fn error(&mut self, error: &ScannerError) {
+        self.error = error.clone();
+        // @todo this should be done in the synchronize method
+        //       don't forget to reset it
         ScannerError::report(error);
+    }
+
+    fn synchronize(&mut self) {
+        self.advance();
+
+        while !self.is_at_end() {
+            if self.previous().token_type == TokenType::Semicolon {
+                return
+            }
+
+            if matches!(self.peek().token_type,
+                TokenType::Class | TokenType::Fun | TokenType::Var | TokenType::For |
+                TokenType::If | TokenType::While | TokenType::Print | TokenType::Return ) {
+                return
+            }
+            self.advance();
+        }
     }
 
     fn consume(&mut self, token_type: &TokenType, message: String) -> Result<Token, ScannerError> {
