@@ -17,22 +17,13 @@ impl Parser {
         }
     }
 
-    //pub fn parse(&mut self) -> Result<Expr, ()> {
-        //match self.expression() {
-            //Ok(expr) => Ok(expr),
-            //Err(err) => {
-                //ScannerError::report(&err);
-                //Err(())
-            //}
-        //}
-    //}
-
     pub fn parse(&mut self) -> Option<Expr> {
         match self.expression() {
             Ok(expr) => Some(expr),
             Err(_) => None,
         }
     }
+
     fn is_match(&mut self, token_types: &Vec<TokenType>) -> bool {
         for t in token_types {
             if self.check(t) {
@@ -47,11 +38,11 @@ impl Parser {
         if self.is_at_end() {
             return false;
         }
-        self.peek().token_type == *token_type
+        &self.peek().token_type == token_type
     }
 
     fn peek(&self) -> Token {
-        self.tokens[self.current].clone()
+        self.tokens.get(self.current).unwrap().clone()
     }
 
     fn is_at_end(&self) -> bool {
@@ -61,7 +52,6 @@ impl Parser {
     fn advance(&mut self) -> Token {
         if !self.is_at_end() {
             self.current += 1;
-            println!("ADVANCING: current = {}", self.current);
         }
         self.previous()
     }
@@ -83,13 +73,21 @@ impl Parser {
 
         while !self.is_at_end() {
             if self.previous().token_type == TokenType::Semicolon {
-                return
+                return;
             }
 
-            if matches!(self.peek().token_type,
-                TokenType::Class | TokenType::Fun | TokenType::Var | TokenType::For |
-                TokenType::If | TokenType::While | TokenType::Print | TokenType::Return ) {
-                return
+            if matches!(
+                self.peek().token_type,
+                TokenType::Class
+                    | TokenType::Fun
+                    | TokenType::Var
+                    | TokenType::For
+                    | TokenType::If
+                    | TokenType::While
+                    | TokenType::Print
+                    | TokenType::Return
+            ) {
+                return;
             }
             self.advance();
         }
@@ -101,7 +99,7 @@ impl Parser {
         } else {
             let err = ScannerError::Error {
                 line: self.peek().line,
-                message
+                message,
             };
             Err(self.error(&err))
         }
@@ -115,7 +113,7 @@ impl Parser {
 
     fn equality(&mut self) -> Result<Expr, ScannerError> {
         let mut expr = self.comparison()?;
-        println!("Equality");
+
         while self.is_match(&vec![TokenType::BangEqual, TokenType::EqualEqual]) {
             let operator = self.previous();
             let right = self.comparison()?;
@@ -131,7 +129,7 @@ impl Parser {
 
     fn comparison(&mut self) -> Result<Expr, ScannerError> {
         let mut expr = self.term()?;
-        println!("Comparison");
+
         while self.is_match(&vec![
             TokenType::Greater,
             TokenType::GreaterEqual,
@@ -153,7 +151,6 @@ impl Parser {
     fn term(&mut self) -> Result<Expr, ScannerError> {
         let mut expr = self.factor()?;
 
-        println!("Term");
         while self.is_match(&vec![TokenType::Minus, TokenType::Plus]) {
             let operator = self.previous();
             let right = self.factor()?;
@@ -168,7 +165,7 @@ impl Parser {
 
     fn factor(&mut self) -> Result<Expr, ScannerError> {
         let mut expr = self.unary()?;
-        println!("Factor");
+
         while self.is_match(&vec![TokenType::Star, TokenType::Slash]) {
             let operator = self.previous();
             let right = self.unary()?;
@@ -183,7 +180,6 @@ impl Parser {
     }
 
     fn unary(&mut self) -> Result<Expr, ScannerError> {
-        println!("Unary: {}", self.is_match(&vec![TokenType::Bang, TokenType::Minus]).to_string());
         if self.is_match(&vec![TokenType::Bang, TokenType::Minus]) {
             let operator = self.previous();
             let right = self.unary()?;
@@ -197,34 +193,44 @@ impl Parser {
     }
 
     fn primary(&mut self) -> Result<Expr, ScannerError> {
-        println!("Primary: Found type {}", self.tokens[self.current]);
-        match self.tokens[self.current].token_type {
-            TokenType::False => Ok(Expr::Literal(LiteralExpr {
+        if self.is_match(&vec![TokenType::False]) {
+            return Ok(Expr::Literal(LiteralExpr {
                 value: Literal::new_bool(false),
-            })),
-            TokenType::True => Ok(Expr::Literal(LiteralExpr {
-                value: Literal::new_bool(true),
-            })),
-            TokenType::Nil => Ok(Expr::Literal(LiteralExpr {
-                value: Literal::new_nil(),
-            })),
-            TokenType::StringLiteral => Ok(Expr::Literal(LiteralExpr {
-                value: Literal::new_string(self.previous().literal.as_string()),
-            })),
-            TokenType::NumberLiteral => Ok(Expr::Literal(LiteralExpr {
-                value: Literal::new_number(self.previous().literal.as_string().parse().unwrap()),
-            })),
-            TokenType::LeftParen => {
-                let expr = self.expression()?;
-                self.consume(&TokenType::RightParen, "Expect ')' after expression.".to_string())?;
-                Ok(Expr::Grouping(GroupingExpr {
-                    expression: Box::new(expr),
-                }))
-            }
-            _ => Err(self.error(&ScannerError::Error {
-                line: self.tokens[self.current].line,
-                message: "Expect expression.".to_string()
-            }))
+            }));
         }
+        if self.is_match(&vec![TokenType::True]) {
+            return Ok(Expr::Literal(LiteralExpr {
+                value: Literal::new_bool(true),
+            }));
+        }
+        if self.is_match(&vec![TokenType::Nil]) {
+            return Ok(Expr::Literal(LiteralExpr {
+                value: Literal::new_nil(),
+            }));
+        }
+        if self.is_match(&vec![TokenType::StringLiteral]) {
+            return Ok(Expr::Literal(LiteralExpr {
+                value: Literal::new_string(self.previous().literal.as_string()),
+            }));
+        }
+        if self.is_match(&vec![TokenType::NumberLiteral]) {
+            return Ok(Expr::Literal(LiteralExpr {
+                value: Literal::new_number(self.previous().literal.as_string().parse().unwrap()),
+            }));
+        }
+        if self.is_match(&vec![TokenType::LeftParen]) {
+            let expr = self.expression()?;
+            self.consume(
+                &TokenType::RightParen,
+                "Expect ')' after expression.".to_string(),
+            )?;
+            return Ok(Expr::Grouping(GroupingExpr {
+                expression: Box::new(expr),
+            }));
+        }
+        return Err(self.error(&ScannerError::Error {
+            line: self.tokens[self.current].line,
+            message: "Expect expression.".to_string(),
+        }));
     }
 }
