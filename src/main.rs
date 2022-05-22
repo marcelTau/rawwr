@@ -11,6 +11,8 @@ use scanner::*;
 mod error;
 use error::*;
 
+mod interpreter;
+
 //mod generate_ast;
 //use generate_ast::generate_ast;
 
