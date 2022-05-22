@@ -1,30 +1,9 @@
 use std::collections::HashMap;
 
-use crate::token::{TokenType, Token, Object};
+use crate::token::{TokenType, Token};
+use crate::object::*;
+use crate::error::*;
 use crate::utils::{is_digit, is_alpha, is_alphanumeric};
-
-#[derive(Debug, Clone)]
-pub enum ScannerError {
-    Default,
-    Error {
-        line: i32,
-        message: String,
-    },
-}
-
-impl ScannerError {
-    pub fn report(error: &ScannerError) -> () {
-        match error {
-            ScannerError::Error {
-                line,
-                message,
-            } => {
-                println!("{} at (line: {})", message, line);
-            }
-            _ => (),
-        }
-    }
-}
 
 pub struct Scanner {
     error: ScannerError,

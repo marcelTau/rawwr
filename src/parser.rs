@@ -1,6 +1,8 @@
 use crate::expr::*;
-use crate::scanner::*;
+use crate::error::*;
 use crate::token::*;
+use crate::object::*;
+use crate::scanner::*;
 
 pub struct Parser {
     tokens: Vec<Token>,

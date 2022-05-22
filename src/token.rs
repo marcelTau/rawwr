@@ -1,4 +1,5 @@
 use core::fmt;
+use crate::object::*;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum TokenType {
@@ -50,74 +51,6 @@ pub enum TokenType {
 
     EOF,
 }
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct IsNil(bool);
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct Literal(Option<f64>, Option<String>, Option<bool>, Option<IsNil>);
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum Object {
-    Num(f64),
-    Str(String),
-    Nil,
-    True,
-    False,
-}
-
-impl fmt::Display for Object {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            Object::Num(x) => write!(f, "{x}"),
-            Object::Str(x) => write!(f, "\"{x}\""),
-            Object::Nil => write!(f, "nil"),
-            Object::True => write!(f, "true"),
-            Object::False => write!(f, "false"),
-        }
-    }
-}
-
-//impl Literal {
-//pub fn new() -> Self {
-//Literal(None, None, None, None)
-//}
-
-//pub fn new_number(number: f64) -> Self {
-//Literal(Some(number), None, None, None)
-//}
-
-//pub fn new_string(string: String) -> Self {
-//Literal(None, Some(string), None, None)
-//}
-
-//pub fn new_bool(boolean: bool) -> Self {
-//Literal(None, None, Some(boolean), None)
-//}
-
-//pub fn new_nil() -> Self {
-//Literal(None, None, None, Some(IsNil(true)))
-//}
-
-//pub fn as_string(&self) -> String {
-//format!("{}", self)
-//}
-//}
-
-//impl fmt::Display for Literal {
-//fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-//let output: String = match self {
-//Literal(Some(x), ..) => x.to_string(),
-//Literal(None, Some(x), ..) => x.to_string(),
-//Literal(None, None, Some(x), ..) => x.to_string(),
-////Literal(None, None, None, Some(x)) => x.0.to_string(), //@todo is this actually "nil"
-//Literal(None, None, None, Some(x)) => if x.0 { "nil".to_string() } else { "".to_string() },
-//_ => "unimplemented".to_string(),
-//};
-
-//write!(f, "{}", output)
-//}
-//}
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Token {

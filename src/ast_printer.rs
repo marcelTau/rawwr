@@ -1,5 +1,5 @@
 use crate::expr::*;
-use crate::scanner::ScannerError;
+use crate::error::*;
 
 pub struct AstPrinter;
 

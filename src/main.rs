@@ -6,11 +6,15 @@ use std::io;
 use std::io::Write;
 
 mod scanner;
-use scanner::{Scanner, ScannerError};
+use scanner::*;
+
+mod error;
+use error::*;
 
 //mod generate_ast;
 //use generate_ast::generate_ast;
 
+mod object;
 mod parser;
 use parser::*;
 mod ast_printer;

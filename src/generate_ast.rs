@@ -21,6 +21,7 @@ pub fn generate_ast(
 
     writeln!(file, "use crate::token::*;")?;
     writeln!(file, "use crate::scanner::*;")?;
+    writeln!(file, "use crate::object::*;")?;
 
     let mut ttypes: Vec<Type> = vec![];
 
