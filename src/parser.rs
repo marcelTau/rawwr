@@ -195,27 +195,22 @@ impl Parser {
     fn primary(&mut self) -> Result<Expr, ScannerError> {
         if self.is_match(&vec![TokenType::False]) {
             return Ok(Expr::Literal(LiteralExpr {
-                value: Literal::new_bool(false),
+                value: Some(Object::False),
             }));
         }
         if self.is_match(&vec![TokenType::True]) {
             return Ok(Expr::Literal(LiteralExpr {
-                value: Literal::new_bool(true),
+                value: Some(Object::True),
             }));
         }
         if self.is_match(&vec![TokenType::Nil]) {
             return Ok(Expr::Literal(LiteralExpr {
-                value: Literal::new_nil(),
+                value: Some(Object::Nil),
             }));
         }
-        if self.is_match(&vec![TokenType::StringLiteral]) {
+        if self.is_match(&vec![TokenType::StringLiteral, TokenType::NumberLiteral]) {
             return Ok(Expr::Literal(LiteralExpr {
-                value: Literal::new_string(self.previous().literal.as_string()),
-            }));
-        }
-        if self.is_match(&vec![TokenType::NumberLiteral]) {
-            return Ok(Expr::Literal(LiteralExpr {
-                value: Literal::new_number(self.previous().literal.as_string().parse().unwrap()),
+                value: self.previous().literal,
             }));
         }
         if self.is_match(&vec![TokenType::LeftParen]) {

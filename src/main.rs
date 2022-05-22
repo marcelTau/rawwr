@@ -25,7 +25,7 @@ fn main() -> std::io::Result<()> {
     //generate_ast("./src".to_string(), "Expr".to_string(), &vec![
       //"Binary   : Box<Expr> left, Token operator, Box<Expr> right".to_string(),
       //"Grouping : Box<Expr> expression".to_string(),
-      //"Literal  : Literal value".to_string(),
+      //"Literal  : Option<Object> value".to_string(),
       //"Unary    : Token operator, Box<Expr> right".to_string()
     //])?;
 

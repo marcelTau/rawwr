@@ -29,7 +29,11 @@ impl ExprVisitor<String> for AstPrinter {
     }
 
     fn visit_literal_expr(&self, expr: &LiteralExpr) -> Result<String, ScannerError> {
-        Ok(expr.value.as_string())
+        if let Some(value) = &expr.value {
+            Ok(value.to_string())
+        } else {
+            Ok("nil".to_string())
+        }
     }
 
     fn visit_unary_expr(&self, expr: &UnaryExpr) -> Result<String, ScannerError> {
