@@ -234,3 +234,67 @@ impl Parser {
         }));
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::ast_printer::AstPrinter;
+
+    fn run(code: &String) -> String {
+        let mut scanner = Scanner::new(code);
+        let tokens = match scanner.tokenize() {
+            Ok(tokens) => tokens,
+            Err(err) => {
+                ScannerError::report(&err);
+                unreachable!();
+            }
+        };
+
+        for t in &tokens {
+            println!("token: {}", t);
+        }
+
+        let mut parser = Parser::new(tokens);
+        let printer = AstPrinter {};
+
+        match parser.parse() {
+            None => "".to_string(),
+            Some(expr) => printer.print(&expr).unwrap(),
+        }
+    }
+
+    #[test]
+    fn simple_addition() {
+        let code = "4 + 5".to_string();
+        let expected = "(+ 4 5)".to_string();
+        assert_eq!(expected, run(&code));
+    }
+
+    #[test]
+    fn operator_precedence() {
+        let code = "4 + 5 * 7".to_string();
+        let expected = "(+ 4 (* 5 7))".to_string();
+        assert_eq!(expected, run(&code));
+    }
+
+    #[test]
+    fn unary() {
+        let code = "-4 + 5 * 7".to_string();
+        let expected = "(+ (- 4) (* 5 7))".to_string();
+        assert_eq!(expected, run(&code));
+    }
+
+    #[test]
+    fn multiple_unary() {
+        let code = "--4 + 5 * 7".to_string();
+        let expected = "(+ (- (- 4)) (* 5 7))".to_string();
+        assert_eq!(expected, run(&code));
+    }
+
+    #[test]
+    fn parens_over_mulitplication_precedence() {
+        let code = "4 * (1 + 2)".to_string();
+        let expected = "(* 4 (group (+ 1 2)))".to_string();
+        assert_eq!(expected, run(&code));
+    }
+}
