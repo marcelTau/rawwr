@@ -80,6 +80,8 @@ fn run_repl() -> io::Result<()> {
         io::stdout().flush().unwrap();
         io::stdin().read_line(&mut line).unwrap();
         run(&line);
+
+        line.clear();
     }
 }
 
