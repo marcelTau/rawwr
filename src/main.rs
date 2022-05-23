@@ -12,6 +12,7 @@ mod error;
 use error::*;
 
 mod interpreter;
+use interpreter::*;
 
 //mod generate_ast;
 //use generate_ast::generate_ast;
@@ -93,16 +94,14 @@ fn run_repl() -> io::Result<()> {
 fn run(source_code: &String) -> Result<(), LoxError> {
     let mut scanner = Scanner::new(source_code);
     let tokens = scanner.tokenize()?;
-    for t in &tokens {
-        println!("token: {}", t);
-    }
 
     let mut parser = Parser::new(tokens);
-    let printer = AstPrinter {};
 
-    match parser.parse() {
-        None => (),
-        Some(expr) => println!("{}", printer.print(&expr).unwrap()),
+    let t = Interpreter {};
+
+    if let Some(expr) = parser.parse() {
+        t.interpret(&expr);
+    } else {
     }
 
     Ok(())

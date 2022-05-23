@@ -40,7 +40,7 @@ pub fn generate_ast(
     writeln!(file, "impl {} {{", base_name)?;
     writeln!(
         file,
-        "    pub fn accept<T>(&self, visitor: &dyn {}Visitor<T>) -> Result<T, ScannerError> {{",
+        "    pub fn accept<T>(&self, visitor: &dyn {}Visitor<T>) -> Result<T, LoxError> {{",
         base_name
     )?;
     writeln!(file, "        match self {{")?;
@@ -69,7 +69,7 @@ pub fn generate_ast(
     for t in &ttypes {
         writeln!(
             file,
-            "    fn visit_{}_{}(&self, expr: &{}{}) -> Result<T, ScannerError>;",
+            "    fn visit_{}_{}(&self, expr: &{}{}) -> Result<T, LoxError>;",
             t.base_name.to_lowercase(),
             base_name.to_lowercase(),
             t.base_name,
@@ -82,7 +82,7 @@ pub fn generate_ast(
         writeln!(file, "impl {}{} {{", t.base_name, base_name)?;
         writeln!(
             file,
-            "    pub fn accept<T>(&self, visitor: &dyn {}Visitor<T>) -> Result<T, ScannerError> {{",
+            "    pub fn accept<T>(&self, visitor: &dyn {}Visitor<T>) -> Result<T, LoxError> {{",
             base_name
         )?;
         writeln!(

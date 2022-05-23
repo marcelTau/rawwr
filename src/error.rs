@@ -8,7 +8,6 @@ pub struct LoxError {
 }
 
 impl LoxError {
-
     pub fn runtime_error(token: &Token, message: &str) -> LoxError {
         let e = LoxError {
             token: Some(token.clone()),
@@ -47,7 +46,7 @@ impl LoxError {
                 eprintln!("{} at '{}' {}", token.line, token, self.message);
             }
         } else {
-            eprintln!("[line {}] Error{}: {}", self.line, msg, self.message);
+            eprintln!("[line {}] Error {}: {}", self.line, msg, self.message);
         }
     }
 }

@@ -3,7 +3,7 @@ use crate::expr::*;
 use crate::object::Object;
 use crate::token::TokenType;
 
-struct Interpreter {}
+pub struct Interpreter {}
 
 impl ExprVisitor<Object> for Interpreter {
     fn visit_literal_expr(&self, expr: &LiteralExpr) -> Result<Object, LoxError> {
@@ -65,6 +65,19 @@ impl Interpreter {
         match object {
             Object::Nil | Object::Bool(false) => false,
             _ => true,
+        }
+    }
+
+    pub fn interpret(&self, expr: &Expr) -> bool {
+        match self.evaluate(&expr) {
+            Ok(ex) => { 
+                println!("{}", ex);
+                true
+            }
+            Err(e) => {
+                e.report("");
+                false
+            }
         }
     }
 }
