@@ -96,3 +96,29 @@ pub fn generate_ast(
 
     Ok(())
 }
+
+fn main() {
+    generate_ast("./src".to_string(), "Expr".to_string(), &vec![
+      "Binary   : Box<Expr> left, Token operator, Box<Expr> right".to_string(),
+      "Grouping : Box<Expr> expression".to_string(),
+      "Literal  : Option<Object> value".to_string(),
+      "Unary    : Token operator, Box<Expr> right".to_string()
+    ])?;
+
+    let expression = Expr::Binary (
+        BinaryExpr { 
+            left: Box::new(Expr::Unary(UnaryExpr {
+                operator: Token::new(TokenType::Minus, "-".to_string(), Literal::new(), 1),
+                right: Box::new(Expr::Literal(LiteralExpr {
+                    value: Literal::new_number(123 as f64),
+                }))
+            })),
+            operator: Token::new(TokenType::Star, "*".to_string(), Literal::new(), 1),
+            right: Box::new(Expr::Grouping(GroupingExpr {
+                expression: Box::new(Expr::Literal(LiteralExpr {
+                    value: Literal::new_number(45.67),
+                }))
+            })),
+        }
+    );
+}

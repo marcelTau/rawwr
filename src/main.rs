@@ -1,61 +1,26 @@
 #![allow(unused_variables, dead_code)]
 
+mod ast_printer;
+mod error;
+mod expr;
+mod interpreter;
+mod object;
+mod parser;
+mod scanner;
+mod token;
+mod utils;
+
+use error::*;
+use interpreter::*;
+use parser::*;
+use scanner::*;
+
 use std::env;
 use std::fs;
 use std::io;
 use std::io::Write;
 
-mod scanner;
-use scanner::*;
-
-mod error;
-use error::*;
-
-mod interpreter;
-use interpreter::*;
-
-//mod generate_ast;
-//use generate_ast::generate_ast;
-
-mod object;
-mod parser;
-use parser::*;
-mod ast_printer;
-use ast_printer::*;
-mod token;
-//use token::*;
-mod utils;
-mod expr;
-//use expr::*;
-
 fn main() -> std::io::Result<()> {
-    //generate_ast("./src".to_string(), "Expr".to_string(), &vec![
-      //"Binary   : Box<Expr> left, Token operator, Box<Expr> right".to_string(),
-      //"Grouping : Box<Expr> expression".to_string(),
-      //"Literal  : Option<Object> value".to_string(),
-      //"Unary    : Token operator, Box<Expr> right".to_string()
-    //])?;
-
-    //let expression = Expr::Binary (
-        //BinaryExpr { 
-            //left: Box::new(Expr::Unary(UnaryExpr {
-                //operator: Token::new(TokenType::Minus, "-".to_string(), Literal::new(), 1),
-                //right: Box::new(Expr::Literal(LiteralExpr {
-                    //value: Literal::new_number(123 as f64),
-                //}))
-            //})),
-            //operator: Token::new(TokenType::Star, "*".to_string(), Literal::new(), 1),
-            //right: Box::new(Expr::Grouping(GroupingExpr {
-                //expression: Box::new(Expr::Literal(LiteralExpr {
-                    //value: Literal::new_number(45.67),
-                //}))
-            //})),
-        //}
-    //);
-
-    //let p = AstPrinter;
-    //println!("expression: {}", p.print(&expression).unwrap());
-    //std::process::exit(0);
     let args: Vec<String> = env::args().collect();
 
     if args.len() > 2 {
