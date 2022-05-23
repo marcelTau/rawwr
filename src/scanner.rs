@@ -160,8 +160,8 @@ impl Scanner {
             .clone();
 
         match token_type {
-            TokenType::True => self.add_token(TokenType::True, Some(Object::True)),
-            TokenType::False => self.add_token(TokenType::False, Some(Object::False)),
+            TokenType::True => self.add_token(TokenType::True, Some(Object::Bool(true))),
+            TokenType::False => self.add_token(TokenType::False, Some(Object::Bool(false))),
             TokenType::Nil => self.add_token(TokenType::Nil, Some(Object::Nil)),
             _ => self.add_token_single(token_type)
         }

@@ -4,9 +4,8 @@ use core::fmt;
 pub enum Object {
     Num(f64),
     Str(String),
+    Bool(bool),
     Nil,
-    True,
-    False,
 }
 
 impl fmt::Display for Object {
@@ -14,9 +13,8 @@ impl fmt::Display for Object {
         match self {
             Object::Num(x) => write!(f, "{x}"),
             Object::Str(x) => write!(f, "\"{x}\""),
+            Object::Bool(x) => write!(f, "{}", x.to_string()),
             Object::Nil => write!(f, "nil"),
-            Object::True => write!(f, "true"),
-            Object::False => write!(f, "false"),
         }
     }
 }

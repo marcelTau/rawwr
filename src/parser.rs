@@ -196,12 +196,12 @@ impl Parser {
     fn primary(&mut self) -> Result<Expr, ScannerError> {
         if self.is_match(&vec![TokenType::False]) {
             return Ok(Expr::Literal(LiteralExpr {
-                value: Some(Object::False),
+                value: Some(Object::Bool(false)),
             }));
         }
         if self.is_match(&vec![TokenType::True]) {
             return Ok(Expr::Literal(LiteralExpr {
-                value: Some(Object::True),
+                value: Some(Object::Bool(true)),
             }));
         }
         if self.is_match(&vec![TokenType::Nil]) {
