@@ -321,7 +321,7 @@ mod tests {
             Token::new(TokenType::Var, "var".to_string(), None, 1),
             Token::new(TokenType::Identifier, "x".to_string(), None, 1),
             Token::new(TokenType::Equal, "=".to_string(), None, 1),
-            Token::new(TokenType::True, "true".to_string(), Some(Object::True), 1),
+            Token::new(TokenType::True, "true".to_string(), Some(Object::Bool(true)), 1),
             Token::new(TokenType::Semicolon, ";".to_string(), None, 1),
             Token::new(TokenType::EOF, "".to_string(), None, 2),
         ].into_iter().collect();

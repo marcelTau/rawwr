@@ -7,16 +7,15 @@ struct Interpreter {}
 
 impl ExprVisitor<Object> for Interpreter {
     fn visit_literal_expr(&self, expr: &LiteralExpr) -> Result<Object, ScannerError> {
-        //Ok(expr.value.unwrap().as_ref())
-        Ok(Object::Nil)
-    }
-
-    fn visit_binary_expr(&self, expr: &BinaryExpr) -> Result<Object, ScannerError> {
-        Ok(Object::Nil)
+        Ok(expr.value.clone().unwrap())
     }
 
     fn visit_grouping_expr(&self, expr: &GroupingExpr) -> Result<Object, ScannerError> {
         Ok(self.evaluate(&expr.expression)?)
+    }
+
+    fn visit_binary_expr(&self, expr: &BinaryExpr) -> Result<Object, ScannerError> {
+        Ok(Object::Nil)
     }
 
     fn visit_unary_expr(&self, expr: &UnaryExpr) -> Result<Object, ScannerError> {
@@ -49,3 +48,92 @@ impl Interpreter {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::token::Token;
+    use super::*;
+
+    fn run(expr: &Expr) -> Object {
+        let interpreter = Interpreter {};
+        interpreter.evaluate(expr).unwrap()
+    }
+
+    #[test]
+    fn unary_number() {
+        let expr = Expr::Unary(UnaryExpr {
+            operator: Token::new(TokenType::Minus, "-".to_string(), None, 1),
+            right: Box::new(Expr::Literal(LiteralExpr {
+                value: Some(Object::Num(8 as f64)),
+            })
+            )
+        });
+        let expected = Object::Num(-8 as f64);
+        let res = run(&expr);
+
+        assert_eq!(expected, res);
+    }
+
+    #[test]
+    fn unary_double_number() {
+        let expr = Expr::Unary(UnaryExpr {
+            operator: Token::new(TokenType::Minus, "-".to_string(), None, 1),
+            right: Box::new(
+                Expr::Unary(UnaryExpr {
+                    operator: Token::new(TokenType::Minus, "-".to_string(), None, 1),
+                    right: Box::new(Expr::Literal(LiteralExpr {
+                        value: Some(Object::Num(10 as f64)),
+                    }),
+                )}),
+            )
+        });
+        let expected = Object::Num(10 as f64);
+        let res = run(&expr);
+
+        assert_eq!(expected, res);
+    }
+
+    #[test]
+    fn unary_boolean() {
+        let expr = Expr::Unary(UnaryExpr {
+            operator: Token::new(TokenType::Bang, "!".to_string(), None, 1),
+            right: Box::new(Expr::Literal(LiteralExpr {
+                value: Some(Object::Bool(true)),
+            })
+            )
+        });
+        let expected = Object::Bool(false);
+        let res = run(&expr);
+
+        assert_eq!(expected, res);
+    }
+
+    #[test]
+    fn unary_double_boolean() {
+        let expr = Expr::Unary(UnaryExpr {
+            operator: Token::new(TokenType::Bang, "!".to_string(), None, 1),
+            right: Box::new(
+                Expr::Unary(UnaryExpr {
+                    operator: Token::new(TokenType::Bang, "!".to_string(), None, 1),
+                    right: Box::new(Expr::Literal(LiteralExpr {
+                        value: Some(Object::Bool(true)),
+                    }),
+                )}),
+            )
+        });
+        let expected = Object::Bool(true);
+        let res = run(&expr);
+
+        assert_eq!(expected, res);
+    }
+}
+
+
+
+
+
+
+
+
+
+
