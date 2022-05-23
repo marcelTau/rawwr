@@ -2,8 +2,21 @@ use crate::error::LoxError;
 use crate::expr::*;
 use crate::object::Object;
 use crate::token::TokenType;
+use crate::stmt::*;
 
 pub struct Interpreter {}
+
+impl StmtVisitor<()> for Interpreter {
+    fn visit_expression_stmt(&self, stmt: &ExpressionStmt) -> Result<(), LoxError> {
+        self.evaluate(&stmt.expression)?;
+        Ok(())
+    }
+    fn visit_print_stmt(&self, stmt: &PrintStmt) -> Result<(), LoxError> {
+        let value = self.evaluate(&stmt.expression)?;
+        println!("{}", value);
+        Ok(())
+    }
+}
 
 impl ExprVisitor<Object> for Interpreter {
     fn visit_literal_expr(&self, expr: &LiteralExpr) -> Result<Object, LoxError> {
@@ -55,8 +68,22 @@ impl ExprVisitor<Object> for Interpreter {
 }
 
 impl Interpreter {
+    pub fn interpret(&self, statements: &[Stmt]) -> bool {
+        for statement in statements {
+            if let Err(e) = self.execute(statement) {
+                e.report("");
+                return false;
+            }
+        }
+        true
+    }
+
     fn evaluate(&self, expr: &Expr) -> Result<Object, LoxError> {
         expr.accept(self)
+    }
+
+    fn execute(&self, statement: &Stmt) -> Result<(), LoxError> {
+        statement.accept(self)
     }
 
     fn is_truthy(&self, object: &Object) -> bool {
@@ -66,18 +93,6 @@ impl Interpreter {
         }
     }
 
-    pub fn interpret(&self, expr: &Expr) -> bool {
-        match self.evaluate(&expr) {
-            Ok(ex) => { 
-                println!("{}", ex);
-                true
-            }
-            Err(e) => {
-                e.report("");
-                false
-            }
-        }
-    }
 }
 
 #[cfg(test)]

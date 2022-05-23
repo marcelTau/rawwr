@@ -1,0 +1,3 @@
+print "one";
+print true; // some commentnothing
+print 1 + 2;

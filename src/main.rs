@@ -3,6 +3,7 @@
 mod ast_printer;
 mod error;
 mod expr;
+mod stmt;
 mod interpreter;
 mod object;
 mod parser;
@@ -38,7 +39,7 @@ fn main() -> std::io::Result<()> {
 fn run_file(path: &String) -> io::Result<()> {
     let content = fs::read_to_string(path)?;
 
-    if run(&content).is_err() {
+    if run(&content).is_ok() {
         std::process::exit(1);
     }
 
@@ -61,13 +62,12 @@ fn run(source_code: &String) -> Result<(), LoxError> {
     let tokens = scanner.tokenize()?;
 
     let mut parser = Parser::new(tokens);
+    let statements = parser.parse()?;
 
-    let t = Interpreter {};
-
-    if let Some(expr) = parser.parse() {
-        t.interpret(&expr);
+    let interpreter = Interpreter {};
+    if interpreter.interpret(&statements) {
+        Ok(())
     } else {
+        Err(LoxError::scanner_error(0, "something went wrong, please go ahead and fix your code"))
     }
-
-    Ok(())
 }
