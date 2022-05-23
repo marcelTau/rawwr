@@ -69,6 +69,8 @@ impl std::ops::Add for Object {
 impl std::cmp::PartialOrd for Object {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         match (self, other) {
+            (Object::Nil, Object::Nil) => Some(std::cmp::Ordering::Equal),
+            (Object::Nil, _) | (_, Object::Nil) => None,
             (Object::Num(left), Object::Num(right)) => left.partial_cmp(right),
             _ => None,
         }

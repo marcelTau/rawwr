@@ -27,6 +27,8 @@ impl ExprVisitor<Object> for Interpreter {
             TokenType::GreaterEqual => Object::Bool(left >= right),
             TokenType::Less => Object::Bool(left < right),
             TokenType::LessEqual => Object::Bool(left <= right),
+            TokenType::BangEqual => Object::Bool(left != right),
+            TokenType::EqualEqual => Object::Bool(left == right),
             _ => unreachable!(),
         };
 
@@ -112,6 +114,14 @@ mod tests {
         Token::new(TokenType::LessEqual, "<=".to_string(), None, 1)
     }
 
+    fn bang_equal() -> Token {
+        Token::new(TokenType::BangEqual, "!=".to_string(), None, 1)
+    }
+
+    fn equal_equal() -> Token {
+        Token::new(TokenType::EqualEqual, "==".to_string(), None, 1)
+    }
+
     fn number(n: i32) -> Object {
         Object::Num(n as f64)
     }
@@ -122,6 +132,10 @@ mod tests {
 
     fn string(s: &str) -> Object {
         Object::Str(s.to_string())
+    }
+
+    fn nil() -> Object {
+        Object::Nil
     }
 
     fn run(expr: &Expr) -> Result<Object, ScannerError> {
@@ -368,6 +382,7 @@ mod tests {
         assert_eq!(expected, res.unwrap());
         
     }
+
     #[test]
     fn binary_less() {
         let expr = Expr::Binary(BinaryExpr {
@@ -384,6 +399,7 @@ mod tests {
         assert_eq!(expected, res.unwrap());
         
     }
+
     #[test]
     fn binary_less_equal() {
         let expr = Expr::Binary(BinaryExpr {
@@ -398,8 +414,8 @@ mod tests {
         let expected = boolean(true);
         let res = run(&expr);
         assert_eq!(expected, res.unwrap());
-        
     }
+
     #[test]
     fn binary_less_equal_fail() {
         let expr = Expr::Binary(BinaryExpr {
@@ -414,6 +430,133 @@ mod tests {
         let expected = boolean(false);
         let res = run(&expr);
         assert_eq!(expected, res.unwrap());
-        
+    }
+
+    #[test]
+    fn binary_bang_equal_fail() {
+        let expr = Expr::Binary(BinaryExpr {
+            left: Box::new(Expr::Literal(LiteralExpr {
+                value: Some(number(11)),
+            })),
+            operator: bang_equal(),
+            right: Box::new(Expr::Literal(LiteralExpr {
+                value: Some(number(11)),
+            })),
+        });
+        let expected = boolean(false);
+        let res = run(&expr);
+        assert_eq!(expected, res.unwrap());
+    }
+
+    #[test]
+    fn binary_bang_equal() {
+        let expr = Expr::Binary(BinaryExpr {
+            left: Box::new(Expr::Literal(LiteralExpr {
+                value: Some(number(11)),
+            })),
+            operator: bang_equal(),
+            right: Box::new(Expr::Literal(LiteralExpr {
+                value: Some(number(10)),
+            })),
+        });
+        let expected = boolean(true);
+        let res = run(&expr);
+        assert_eq!(expected, res.unwrap());
+    }
+
+    #[test]
+    fn binary_equal_equal_fail() {
+        let expr = Expr::Binary(BinaryExpr {
+            left: Box::new(Expr::Literal(LiteralExpr {
+                value: Some(number(11)),
+            })),
+            operator: equal_equal(),
+            right: Box::new(Expr::Literal(LiteralExpr {
+                value: Some(number(10)),
+            })),
+        });
+        let expected = boolean(false);
+        let res = run(&expr);
+        assert_eq!(expected, res.unwrap());
+    }
+
+    #[test]
+    fn binary_equal_equal() {
+        let expr = Expr::Binary(BinaryExpr {
+            left: Box::new(Expr::Literal(LiteralExpr {
+                value: Some(number(11)),
+            })),
+            operator: equal_equal(),
+            right: Box::new(Expr::Literal(LiteralExpr {
+                value: Some(number(11)),
+            })),
+        });
+        let expected = boolean(true);
+        let res = run(&expr);
+        assert_eq!(expected, res.unwrap());
+    }
+
+    #[test]
+    fn binary_equal_equal_nil() {
+        let expr = Expr::Binary(BinaryExpr {
+            left: Box::new(Expr::Literal(LiteralExpr {
+                value: Some(nil()),
+            })),
+            operator: equal_equal(),
+            right: Box::new(Expr::Literal(LiteralExpr {
+                value: Some(nil()),
+            })),
+        });
+        let expected = boolean(true);
+        let res = run(&expr);
+        assert_eq!(expected, res.unwrap());
+    }
+
+    #[test]
+    fn binary_equal_equal_nil_fail() {
+        let expr = Expr::Binary(BinaryExpr {
+            left: Box::new(Expr::Literal(LiteralExpr {
+                value: Some(number(4)),
+            })),
+            operator: equal_equal(),
+            right: Box::new(Expr::Literal(LiteralExpr {
+                value: Some(nil()),
+            })),
+        });
+        let expected = boolean(false);
+        let res = run(&expr);
+        assert_eq!(expected, res.unwrap());
+    }
+
+    #[test]
+    fn binary_equal_equal_string() {
+        let expr = Expr::Binary(BinaryExpr {
+            left: Box::new(Expr::Literal(LiteralExpr {
+                value: Some(string("hello")),
+            })),
+            operator: equal_equal(),
+            right: Box::new(Expr::Literal(LiteralExpr {
+                value: Some(string("hello")),
+            })),
+        });
+        let expected = boolean(true);
+        let res = run(&expr);
+        assert_eq!(expected, res.unwrap());
+    }
+
+    #[test]
+    fn binary_equal_equal_string_fail() {
+        let expr = Expr::Binary(BinaryExpr {
+            left: Box::new(Expr::Literal(LiteralExpr {
+                value: Some(string("ello")),
+            })),
+            operator: equal_equal(),
+            right: Box::new(Expr::Literal(LiteralExpr {
+                value: Some(string("hello")),
+            })),
+        });
+        let expected = boolean(false);
+        let res = run(&expr);
+        assert_eq!(expected, res.unwrap());
     }
 }
