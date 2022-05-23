@@ -32,13 +32,11 @@ impl ExprVisitor<Object> for Interpreter {
             _ => unreachable!(),
         };
 
-        if result == Object::ArithmeticError {
-            Err(LoxError::runtime_error(
-                &expr.operator,
-                "Illegeal Expression",
-            ))
-        } else {
-            Ok(result)
+        match result {
+            Object::ArithmeticError | Object::DivByZeroError => {
+                Err(LoxError::runtime_error(&expr.operator, format!("{}", result).as_str()))
+            }
+            _ => Ok(result)
         }
     }
 

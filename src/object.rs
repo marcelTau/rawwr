@@ -7,16 +7,18 @@ pub enum Object {
     Bool(bool),
     Nil,
     ArithmeticError,
+    DivByZeroError,
 }
 
 impl fmt::Display for Object {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Object::Num(x) => write!(f, "{x}"),
-            Object::Str(x) => write!(f, "\"{x}\""),
+            Object::Str(x) => write!(f, "{x}"),
             Object::Bool(x) => write!(f, "{}", x.to_string()),
             Object::Nil => write!(f, "nil"),
-            Object::ArithmeticError => panic!("This ArithmeticError should not have happened"),
+            Object::ArithmeticError => write!(f, "ArithmeticError"),
+            Object::DivByZeroError => write!(f, "DivByZeroError"),
         }
     }
 }
@@ -37,7 +39,13 @@ impl std::ops::Div for Object {
 
     fn div(self, other: Self) -> Object {
         match (self, other) {
-            (Object::Num(left), Object::Num(right)) => Object::Num(left / right),
+            (Object::Num(left), Object::Num(right)) => { 
+                if right == 0 as f64 {
+                    Object::DivByZeroError
+                } else {
+                    Object::Num(left / right)
+                }
+            }
             _ => Object::ArithmeticError,
         }
     }
