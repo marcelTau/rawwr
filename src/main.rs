@@ -72,7 +72,9 @@ fn main() -> std::io::Result<()> {
 fn run_file(path: &String) -> io::Result<()> {
     let content = fs::read_to_string(path)?;
 
-    run(&content);
+    if run(&content).is_err() {
+        std::process::exit(1);
+    }
 
     Ok(())
 }
@@ -83,22 +85,14 @@ fn run_repl() -> io::Result<()> {
         print!("> ");
         io::stdout().flush().unwrap();
         io::stdin().read_line(&mut line).unwrap();
-        run(&line);
-
+        let _ = run(&line);
         line.clear();
     }
 }
 
-fn run(source_code: &String) {
+fn run(source_code: &String) -> Result<(), LoxError> {
     let mut scanner = Scanner::new(source_code);
-    let tokens = match scanner.tokenize() {
-        Ok(tokens) => tokens,
-        Err(err) => {
-            ScannerError::report(&err);
-            vec![]
-        }
-    };
-
+    let tokens = scanner.tokenize()?;
     for t in &tokens {
         println!("token: {}", t);
     }
@@ -111,4 +105,5 @@ fn run(source_code: &String) {
         Some(expr) => println!("{}", printer.print(&expr).unwrap()),
     }
 
+    Ok(())
 }

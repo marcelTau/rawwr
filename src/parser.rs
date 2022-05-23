@@ -6,7 +6,6 @@ use crate::object::*;
 pub struct Parser {
     tokens: Vec<Token>,
     current: usize,
-    error: ScannerError,
 }
 
 impl Parser {
@@ -14,7 +13,6 @@ impl Parser {
         Parser {
             tokens: tokens.clone(),
             current: 0,
-            error: ScannerError::Default,
         }
     }
 
@@ -61,14 +59,6 @@ impl Parser {
         self.tokens.get(self.current - 1).unwrap().clone()
     }
 
-    fn error(&mut self, error: &ScannerError) -> ScannerError {
-        self.error = error.clone();
-        // @todo this should be done in the synchronize method
-        //       don't forget to reset it
-        ScannerError::report(error);
-        error.clone()
-    }
-
     fn synchronize(&mut self) {
         self.advance();
 
@@ -94,25 +84,21 @@ impl Parser {
         }
     }
 
-    fn consume(&mut self, token_type: &TokenType, message: String) -> Result<Token, ScannerError> {
+    fn consume(&mut self, token_type: &TokenType, message: String) -> Result<Token, LoxError> {
         if self.check(token_type) {
-            Ok(self.advance())
+            Ok(self.advance()) //@todo maybe clone here
         } else {
-            let err = ScannerError::Error {
-                line: self.peek().line,
-                message,
-            };
-            Err(self.error(&err))
+            Err(LoxError::parse_error(&self.peek(), &message))
         }
     }
 
     // ------------------------------------------------------------------------
 
-    fn expression(&mut self) -> Result<Expr, ScannerError> {
+    fn expression(&mut self) -> Result<Expr, LoxError> {
         self.equality()
     }
 
-    fn equality(&mut self) -> Result<Expr, ScannerError> {
+    fn equality(&mut self) -> Result<Expr, LoxError> {
         let mut expr = self.comparison()?;
 
         while self.is_match(&vec![TokenType::BangEqual, TokenType::EqualEqual]) {
@@ -128,7 +114,7 @@ impl Parser {
         Ok(expr)
     }
 
-    fn comparison(&mut self) -> Result<Expr, ScannerError> {
+    fn comparison(&mut self) -> Result<Expr, LoxError> {
         let mut expr = self.term()?;
 
         while self.is_match(&vec![
@@ -149,7 +135,7 @@ impl Parser {
         Ok(expr)
     }
 
-    fn term(&mut self) -> Result<Expr, ScannerError> {
+    fn term(&mut self) -> Result<Expr, LoxError> {
         let mut expr = self.factor()?;
 
         while self.is_match(&vec![TokenType::Minus, TokenType::Plus]) {
@@ -164,7 +150,7 @@ impl Parser {
         Ok(expr)
     }
 
-    fn factor(&mut self) -> Result<Expr, ScannerError> {
+    fn factor(&mut self) -> Result<Expr, LoxError> {
         let mut expr = self.unary()?;
 
         while self.is_match(&vec![TokenType::Star, TokenType::Slash]) {
@@ -180,7 +166,7 @@ impl Parser {
         Ok(expr)
     }
 
-    fn unary(&mut self) -> Result<Expr, ScannerError> {
+    fn unary(&mut self) -> Result<Expr, LoxError> {
         if self.is_match(&vec![TokenType::Bang, TokenType::Minus]) {
             let operator = self.previous();
             let right = self.unary()?;
@@ -193,7 +179,7 @@ impl Parser {
         }
     }
 
-    fn primary(&mut self) -> Result<Expr, ScannerError> {
+    fn primary(&mut self) -> Result<Expr, LoxError> {
         if self.is_match(&vec![TokenType::False]) {
             return Ok(Expr::Literal(LiteralExpr {
                 value: Some(Object::Bool(false)),
@@ -224,10 +210,8 @@ impl Parser {
                 expression: Box::new(expr),
             }));
         }
-        return Err(self.error(&ScannerError::Error {
-            line: self.tokens[self.current].line,
-            message: "Expect expression.".to_string(),
-        }));
+
+        return Err(LoxError::parse_error(&self.tokens[self.current], "Expect Expression"));
     }
 }
 
@@ -242,7 +226,7 @@ mod tests {
         let tokens = match scanner.tokenize() {
             Ok(tokens) => tokens,
             Err(err) => {
-                ScannerError::report(&err);
+                //LoxError::report(&err); //@todo recheck
                 unreachable!();
             }
         };

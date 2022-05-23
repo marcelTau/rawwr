@@ -1,4 +1,4 @@
-use crate::error::ScannerError;
+use crate::error::LoxError;
 use crate::expr::*;
 use crate::object::Object;
 use crate::token::TokenType;
@@ -6,15 +6,15 @@ use crate::token::TokenType;
 struct Interpreter {}
 
 impl ExprVisitor<Object> for Interpreter {
-    fn visit_literal_expr(&self, expr: &LiteralExpr) -> Result<Object, ScannerError> {
+    fn visit_literal_expr(&self, expr: &LiteralExpr) -> Result<Object, LoxError> {
         Ok(expr.value.clone().unwrap())
     }
 
-    fn visit_grouping_expr(&self, expr: &GroupingExpr) -> Result<Object, ScannerError> {
+    fn visit_grouping_expr(&self, expr: &GroupingExpr) -> Result<Object, LoxError> {
         Ok(self.evaluate(&expr.expression)?)
     }
 
-    fn visit_binary_expr(&self, expr: &BinaryExpr) -> Result<Object, ScannerError> {
+    fn visit_binary_expr(&self, expr: &BinaryExpr) -> Result<Object, LoxError> {
         let left = self.evaluate(&expr.left)?;
         let right = self.evaluate(&expr.right)?;
 
@@ -33,16 +33,16 @@ impl ExprVisitor<Object> for Interpreter {
         };
 
         if result == Object::ArithmeticError {
-            Err(ScannerError::Error {
-                line: expr.operator.line,
-                message: "Illegeal Expression".to_string(),
-            })
+            Err(LoxError::runtime_error(
+                &expr.operator,
+                "Illegeal Expression",
+            ))
         } else {
             Ok(result)
         }
     }
 
-    fn visit_unary_expr(&self, expr: &UnaryExpr) -> Result<Object, ScannerError> {
+    fn visit_unary_expr(&self, expr: &UnaryExpr) -> Result<Object, LoxError> {
         let right = self.evaluate(&expr.right)?;
 
         match expr.operator.token_type {
@@ -51,17 +51,13 @@ impl ExprVisitor<Object> for Interpreter {
                 _ => Ok(Object::Nil),
             },
             TokenType::Bang => Ok(Object::Bool(!self.is_truthy(&right))),
-
-            _ => Err(ScannerError::Error {
-                line: expr.operator.line,
-                message: "This should be unreachable".to_string(),
-            }),
+            _ => Err(LoxError::runtime_error(&expr.operator, "Unreachable"))
         }
     }
 }
 
 impl Interpreter {
-    fn evaluate(&self, expr: &Expr) -> Result<Object, ScannerError> {
+    fn evaluate(&self, expr: &Expr) -> Result<Object, LoxError> {
         expr.accept(self)
     }
 
@@ -138,7 +134,7 @@ mod tests {
         Object::Nil
     }
 
-    fn run(expr: &Expr) -> Result<Object, ScannerError> {
+    fn run(expr: &Expr) -> Result<Object, LoxError> {
         let interpreter = Interpreter {};
         interpreter.evaluate(expr)
     }

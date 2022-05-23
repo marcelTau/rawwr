@@ -6,7 +6,6 @@ use crate::error::*;
 use crate::utils::{is_digit, is_alpha, is_alphanumeric};
 
 pub struct Scanner {
-    error: ScannerError,
     source_code: String,
     tokens: Vec<Token>,
     current: usize,
@@ -36,7 +35,6 @@ impl Scanner {
             ("while".to_string(), TokenType::While),
         ]);
         Scanner {
-            error: ScannerError::Default,
             tokens: Vec::<Token>::new(),
             source_code: source_code.clone(),
             current: 0,
@@ -104,7 +102,7 @@ impl Scanner {
         self.line += 1;
     }
 
-    fn string(&mut self) {
+    fn string(&mut self) -> Result<(), LoxError> {
         while self.peek() != '"' && !self.is_at_end() {
             if self.peek() == '\n' {
                 self.new_line();
@@ -113,11 +111,7 @@ impl Scanner {
         }
 
         if self.is_at_end() {
-            self.error = ScannerError::Error {
-                line: self.line,
-                message: "Unterminated String.".to_string(),
-            };
-            return;
+            return Err(LoxError::scanner_error(self.line, "Unterminated String."));
         }
 
         self.advance();
@@ -127,6 +121,8 @@ impl Scanner {
             TokenType::StringLiteral,
             Some(Object::Str(literal.to_string().clone())),
         );
+
+        Ok(())
     }
 
     fn number(&mut self) {
@@ -167,7 +163,7 @@ impl Scanner {
         }
     }
 
-    fn scan_token(&mut self) {
+    fn scan_token(&mut self) -> Result<(), LoxError> {
         let c: char = self.advance();
 
         match c {
@@ -233,7 +229,7 @@ impl Scanner {
             }
 
             '\"' => {
-                self.string();
+                self.string()?;
             }
 
             _ => {
@@ -242,34 +238,35 @@ impl Scanner {
                 } else if is_alpha(c) {
                     self.identifier();
                 } else {
-                    self.error = ScannerError::Error {
-                        line: self.line,
-                        message: "Unexpected Character.".to_string(),
-                    };
+                    return Err(LoxError::scanner_error(self.line, "Unexpected Character"));
                 }
             }
         }
+        Ok(())
     }
 
-    pub fn tokenize(&mut self) -> Result<Vec<Token>, ScannerError> {
+    pub fn tokenize(&mut self) -> Result<Vec<Token>, LoxError> {
+        let mut had_error: Option<LoxError> = None;
+
         let emit_token = |token_type: TokenType| {
             let lexeme = &self.source_code[self.start..self.current];
         };
 
         while !self.is_at_end() {
             self.start = self.current;
-            self.scan_token();
-
-            match &self.error {
-                ScannerError::Error { .. } => {
-                    return Err(self.error.clone());
+            match self.scan_token() {
+                Err(e) => {
+                    e.report("");
+                    had_error = Some(e);
                 }
                 _ => ()
             }
         }
-
         self.add_token_single(TokenType::EOF);
-        Ok(self.tokens.clone())
+        match had_error {
+            Some(e) => Err(e),
+            _ => Ok(self.tokens.clone())
+        }
     }
 }
 
