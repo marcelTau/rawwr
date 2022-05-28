@@ -25,13 +25,13 @@ use std::io::Write;
 use std::cmp::Ordering;
 
 struct Lox {
-    interpreter: Interpreter
+    interpreter: Interpreter,
 }
 
 impl Lox {
     fn new() -> Self {
         Lox {
-            interpreter: Interpreter::new()
+            interpreter: Interpreter::new(),
         }
     }
     fn run_file(&mut self, path: &str) -> io::Result<()> {
@@ -62,18 +62,18 @@ impl Lox {
         let mut parser = Parser::new(tokens);
         let statements = parser.parse()?;
 
-
         if parser.success() && self.interpreter.interpret(&statements) {
             Ok(())
         } else {
-            Err(LoxError::scanner_error(
-                0,
-                "something went wrong, please go ahead and fix your code",
-            ))
+            Ok(())
+            // @todo should this still be here
+            //Err(LoxError::scanner_error(
+            //0,
+            //"something went wrong, please go ahead and fix your code",
+            //))
         }
     }
 }
-
 
 fn main() -> std::io::Result<()> {
     let args: Vec<String> = env::args().collect();
@@ -94,4 +94,3 @@ fn main() -> std::io::Result<()> {
     }
     Ok(())
 }
-

@@ -1,8 +1,8 @@
 use crate::error::*;
 use crate::object::*;
 use crate::token::*;
-use std::collections::HashMap;
 use std::collections::hash_map::Entry;
+use std::collections::HashMap;
 
 pub struct Environment {
     values: HashMap<String, Object>,
@@ -15,7 +15,7 @@ impl Environment {
         }
     }
 
-    pub fn define(&mut self, name: &String, value: Object) {
+    pub fn define(&mut self, name: &str, value: Object) {
         self.values.insert(name.to_string(), value);
     }
 
@@ -33,7 +33,10 @@ impl Environment {
             object.insert(value);
             Ok(())
         } else {
-            Err(LoxError::runtime_error(name, &format!("ASSIGN: Undefined variable '{}'.", &name.lexeme)))
+            Err(LoxError::runtime_error(
+                name,
+                &format!("ASSIGN: Undefined variable '{}'.", &name.lexeme),
+            ))
         }
     }
 }

@@ -7,12 +7,16 @@ use crate::token::*;
 pub struct Parser {
     tokens: Vec<Token>,
     current: usize,
-    had_error: bool
+    had_error: bool,
 }
 
 impl Parser {
     pub fn new(tokens: Vec<Token>) -> Self {
-        Parser { tokens, current: 0, had_error: false }
+        Parser {
+            tokens,
+            current: 0,
+            had_error: false,
+        }
     }
 
     pub fn parse(&mut self) -> Result<Vec<Stmt>, LoxError> {
@@ -171,9 +175,9 @@ impl Parser {
             let value = self.assignment()?;
 
             if let Expr::Variable(expr) = expr {
-                return Ok(Expr::Assign(AssignExpr{
+                return Ok(Expr::Assign(AssignExpr {
                     name: expr.name,
-                    value: Box::new(value)
+                    value: Box::new(value),
                 }));
             }
             self.error(&equals, "Invalid assignment target");

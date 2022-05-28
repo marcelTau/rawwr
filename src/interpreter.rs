@@ -90,7 +90,9 @@ impl ExprVisitor<Object> for Interpreter {
 
     fn visit_assign_expr(&self, expr: &AssignExpr) -> Result<Object, LoxError> {
         let value = self.evaluate(&expr.value)?;
-        self.environment.borrow_mut().assign(&expr.name, value.clone())?;
+        self.environment
+            .borrow_mut()
+            .assign(&expr.name, value.clone())?;
         Ok(value)
     }
 }
@@ -105,7 +107,7 @@ impl Interpreter {
     pub fn interpret(&self, statements: &[Stmt]) -> bool {
         for statement in statements {
             if let Err(e) = self.execute(statement) {
-                e.report("");
+                //e.report("");
                 return false;
             }
         }
@@ -674,29 +676,4 @@ mod tests {
         assert!(e.assign(&id, Object::Num(100.0)).is_ok());
         assert_eq!(e.get(&id).unwrap(), Object::Num(100.0));
     }
-
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
