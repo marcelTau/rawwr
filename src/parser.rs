@@ -21,7 +21,7 @@ impl Parser {
         let mut statements = Vec::new();
 
         while !self.is_at_end() {
-            statements.push(self.statement()?);
+            statements.push(self.declaration()?);
         }
 
         Ok(statements)
@@ -102,6 +102,20 @@ impl Parser {
         self.equality()
     }
 
+    fn declaration(&mut self) -> Result<Stmt, LoxError> {
+        let result = if self.is_match(&vec![TokenType::Var]) {
+            self.var_declaration()
+        } else {
+            self.statement()
+        };
+
+        if result.is_err() {
+            self.synchronize();
+        }
+
+        result
+    }
+
     fn statement(&mut self) -> Result<Stmt, LoxError> {
         if self.is_match(&vec![TokenType::Print]) {
             self.print_statement()
@@ -114,6 +128,23 @@ impl Parser {
         let value = self.expression()?;
         self.consume(&TokenType::Semicolon, "Expect ';' after value.".to_string())?;
         Ok(Stmt::Print(PrintStmt { expression: value }))
+    }
+
+    fn var_declaration(&mut self) -> Result<Stmt, LoxError> {
+        let name = self.consume(&TokenType::Identifier, "Expect variable name.".to_string())?;
+
+        let initializer = if self.is_match(&vec![TokenType::Equal]) {
+            Some(self.expression()?)
+        } else {
+            None
+        };
+
+        self.consume(&TokenType::Semicolon, "Expect ';' after variable declaration".to_string())?;
+
+        Ok(Stmt::Var(VarStmt {
+            name,
+            initializer
+        }))
     }
 
     fn expression_statement(&mut self) -> Result<Stmt, LoxError> {
@@ -227,6 +258,13 @@ impl Parser {
                 value: self.previous().literal,
             }));
         }
+
+        if self.is_match(&vec![TokenType::Identifier]) {
+            return Ok(Expr::Variable(VariableExpr {
+                name: self.previous()
+            }));
+        }
+
         if self.is_match(&vec![TokenType::LeftParen]) {
             let expr = self.expression()?;
             self.consume(
