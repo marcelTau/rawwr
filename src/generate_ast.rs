@@ -102,6 +102,7 @@ pub fn generate_ast(
 
 fn main() -> Result<(), std::io::Error> {
     generate_ast("./src".to_string(), "Expr".to_string(), &vec![
+        "Assign   : Token name, Box<Expr> value".to_string(),
         "Binary   : Box<Expr> left, Token operator, Box<Expr> right".to_string(),
         "Grouping : Box<Expr> expression".to_string(),
         "Literal  : Option<Object> value".to_string(),

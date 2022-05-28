@@ -1,8 +1,8 @@
 #![allow(unused_imports)]
+use crate::token::*;
+use crate::object::*;
 use crate::error::*;
 use crate::expr::*;
-use crate::object::*;
-use crate::token::*;
 
 pub enum Stmt {
     Expression(ExpressionStmt),
@@ -55,3 +55,4 @@ impl VarStmt {
         visitor.visit_var_stmt(self)
     }
 }
+

@@ -87,6 +87,12 @@ impl ExprVisitor<Object> for Interpreter {
     fn visit_variable_expr(&self, expr: &VariableExpr) -> Result<Object, LoxError> {
         self.environment.borrow().get(&expr.name)
     }
+
+    fn visit_assign_expr(&self, expr: &AssignExpr) -> Result<Object, LoxError> {
+        let value = self.evaluate(&expr.value)?;
+        self.environment.borrow_mut().assign(&expr.name, value.clone())?;
+        Ok(value)
+    }
 }
 
 impl Interpreter {
@@ -651,4 +657,46 @@ mod tests {
         let var_expression = VariableExpr { name: name.clone() };
         assert!(interpreter.visit_variable_expr(&var_expression).is_err());
     }
+
+    #[test]
+    fn assign_value_to_variable_undefined() {
+        let mut e = Environment::new();
+        let name = Token::new(TokenType::Identifier, "foo".to_string(), None, 1);
+        assert!(e.assign(&name, Object::Nil).is_err());
+    }
+
+    #[test]
+    fn reassign_value_to_existing_variable() {
+        let mut e = Environment::new();
+        let id = Token::new(TokenType::Identifier, "foo".to_string(), None, 1);
+        e.define(&"foo".to_string(), Object::Num(10.0));
+        assert_eq!(e.get(&id).unwrap(), Object::Num(10.0));
+        assert!(e.assign(&id, Object::Num(100.0)).is_ok());
+        assert_eq!(e.get(&id).unwrap(), Object::Num(100.0));
+    }
+
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

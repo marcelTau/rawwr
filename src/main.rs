@@ -24,8 +24,61 @@ use std::io::Write;
 
 use std::cmp::Ordering;
 
+struct Lox {
+    interpreter: Interpreter
+}
+
+impl Lox {
+    fn new() -> Self {
+        Lox {
+            interpreter: Interpreter::new()
+        }
+    }
+    fn run_file(&mut self, path: &str) -> io::Result<()> {
+        let content = fs::read_to_string(path)?;
+
+        if self.run(&content).is_ok() {
+            std::process::exit(1);
+        }
+
+        Ok(())
+    }
+
+    fn run_repl(&mut self) -> io::Result<()> {
+        let mut line = String::new();
+        loop {
+            print!("> ");
+            io::stdout().flush().unwrap();
+            io::stdin().read_line(&mut line).unwrap();
+            let _ = self.run(&line);
+            line.clear();
+        }
+    }
+
+    fn run(&mut self, source_code: &str) -> Result<(), LoxError> {
+        let mut scanner = Scanner::new(source_code);
+        let tokens = scanner.tokenize()?;
+
+        let mut parser = Parser::new(tokens);
+        let statements = parser.parse()?;
+
+
+        if parser.success() && self.interpreter.interpret(&statements) {
+            Ok(())
+        } else {
+            Err(LoxError::scanner_error(
+                0,
+                "something went wrong, please go ahead and fix your code",
+            ))
+        }
+    }
+}
+
+
 fn main() -> std::io::Result<()> {
     let args: Vec<String> = env::args().collect();
+
+    let mut lox = Lox::new();
 
     match args.len().cmp(&2) {
         Ordering::Greater => {
@@ -33,51 +86,12 @@ fn main() -> std::io::Result<()> {
             std::process::exit(1);
         }
         Ordering::Less => {
-            run_repl()?;
+            lox.run_repl()?;
         }
         Ordering::Equal => {
-            run_file(&args[1])?;
+            lox.run_file(&args[1])?;
         }
     }
     Ok(())
 }
 
-fn run_file(path: &str) -> io::Result<()> {
-    let content = fs::read_to_string(path)?;
-
-    if run(&content).is_ok() {
-        std::process::exit(1);
-    }
-
-    Ok(())
-}
-
-fn run_repl() -> io::Result<()> {
-    let mut line = String::new();
-    loop {
-        print!("> ");
-        io::stdout().flush().unwrap();
-        io::stdin().read_line(&mut line).unwrap();
-        let _ = run(&line);
-        line.clear();
-    }
-}
-
-fn run(source_code: &str) -> Result<(), LoxError> {
-    let mut scanner = Scanner::new(source_code);
-    let tokens = scanner.tokenize()?;
-
-    let interpreter = Interpreter::new();
-    let mut parser = Parser::new(tokens);
-    let statements = parser.parse()?;
-
-
-    if parser.success() && interpreter.interpret(&statements) {
-        Ok(())
-    } else {
-        Err(LoxError::scanner_error(
-            0,
-            "something went wrong, please go ahead and fix your code",
-        ))
-    }
-}
