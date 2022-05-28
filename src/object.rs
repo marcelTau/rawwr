@@ -39,7 +39,7 @@ impl std::ops::Div for Object {
 
     fn div(self, other: Self) -> Object {
         match (self, other) {
-            (Object::Num(left), Object::Num(right)) => { 
+            (Object::Num(left), Object::Num(right)) => {
                 if right == 0 as f64 {
                     Object::DivByZeroError
                 } else {
@@ -84,4 +84,3 @@ impl std::cmp::PartialOrd for Object {
         }
     }
 }
-

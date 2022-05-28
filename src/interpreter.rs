@@ -1,10 +1,15 @@
+use std::cell::RefCell;
+
+use crate::environment::*;
 use crate::error::LoxError;
 use crate::expr::*;
 use crate::object::Object;
-use crate::token::TokenType;
 use crate::stmt::*;
+use crate::token::TokenType;
 
-pub struct Interpreter {}
+pub struct Interpreter {
+    environment: RefCell<Environment>,
+}
 
 impl StmtVisitor<()> for Interpreter {
     fn visit_expression_stmt(&self, stmt: &ExpressionStmt) -> Result<(), LoxError> {
@@ -18,6 +23,14 @@ impl StmtVisitor<()> for Interpreter {
     }
 
     fn visit_var_stmt(&self, stmt: &VarStmt) -> Result<(), LoxError> {
+        let value = if let Some(initializer) = &stmt.initializer {
+            self.evaluate(initializer)?
+        } else {
+            Object::Nil
+        };
+        self.environment
+            .borrow_mut()
+            .define(&stmt.name.lexeme, value);
         Ok(())
     }
 }
@@ -50,10 +63,11 @@ impl ExprVisitor<Object> for Interpreter {
         };
 
         match result {
-            Object::ArithmeticError | Object::DivByZeroError => {
-                Err(LoxError::runtime_error(&expr.operator, format!("{}", result).as_str()))
-            }
-            _ => Ok(result)
+            Object::ArithmeticError | Object::DivByZeroError => Err(LoxError::runtime_error(
+                &expr.operator,
+                format!("{}", result).as_str(),
+            )),
+            _ => Ok(result),
         }
     }
 
@@ -66,16 +80,22 @@ impl ExprVisitor<Object> for Interpreter {
                 _ => Ok(Object::Nil),
             },
             TokenType::Bang => Ok(Object::Bool(!self.is_truthy(&right))),
-            _ => Err(LoxError::runtime_error(&expr.operator, "Unreachable"))
+            _ => Err(LoxError::runtime_error(&expr.operator, "Unreachable")),
         }
     }
 
     fn visit_variable_expr(&self, expr: &VariableExpr) -> Result<Object, LoxError> {
-        Ok(Object::Nil)
+        self.environment.borrow().get(&expr.name)
     }
 }
 
 impl Interpreter {
+    pub fn new() -> Self {
+        Interpreter {
+            environment: RefCell::new(Environment::new()),
+        }
+    }
+
     pub fn interpret(&self, statements: &[Stmt]) -> bool {
         for statement in statements {
             if let Err(e) = self.execute(statement) {
@@ -97,7 +117,6 @@ impl Interpreter {
     fn is_truthy(&self, object: &Object) -> bool {
         !matches!(object, Object::Nil | Object::Bool(false))
     }
-
 }
 
 #[cfg(test)]
@@ -166,7 +185,7 @@ mod tests {
     }
 
     fn run(expr: &Expr) -> Result<Object, LoxError> {
-        let interpreter = Interpreter {};
+        let interpreter = Interpreter::new();
         interpreter.evaluate(expr)
     }
 
@@ -339,7 +358,6 @@ mod tests {
         let expected = boolean(true);
         let res = run(&expr);
         assert_eq!(expected, res.unwrap());
-        
     }
 
     #[test]
@@ -356,7 +374,6 @@ mod tests {
         let expected = boolean(false);
         let res = run(&expr);
         assert_eq!(expected, res.unwrap());
-        
     }
 
     #[test]
@@ -373,7 +390,6 @@ mod tests {
         let expected = boolean(true);
         let res = run(&expr);
         assert_eq!(expected, res.unwrap());
-        
     }
 
     #[test]
@@ -390,7 +406,6 @@ mod tests {
         let expected = boolean(false);
         let res = run(&expr);
         assert_eq!(expected, res.unwrap());
-        
     }
 
     #[test]
@@ -407,7 +422,6 @@ mod tests {
         let expected = boolean(false);
         let res = run(&expr);
         assert_eq!(expected, res.unwrap());
-        
     }
 
     #[test]
@@ -424,7 +438,6 @@ mod tests {
         let expected = boolean(false);
         let res = run(&expr);
         assert_eq!(expected, res.unwrap());
-        
     }
 
     #[test]
@@ -526,13 +539,9 @@ mod tests {
     #[test]
     fn binary_equal_equal_nil() {
         let expr = Expr::Binary(BinaryExpr {
-            left: Box::new(Expr::Literal(LiteralExpr {
-                value: Some(nil()),
-            })),
+            left: Box::new(Expr::Literal(LiteralExpr { value: Some(nil()) })),
             operator: equal_equal(),
-            right: Box::new(Expr::Literal(LiteralExpr {
-                value: Some(nil()),
-            })),
+            right: Box::new(Expr::Literal(LiteralExpr { value: Some(nil()) })),
         });
         let expected = boolean(true);
         let res = run(&expr);
@@ -546,9 +555,7 @@ mod tests {
                 value: Some(number(4)),
             })),
             operator: equal_equal(),
-            right: Box::new(Expr::Literal(LiteralExpr {
-                value: Some(nil()),
-            })),
+            right: Box::new(Expr::Literal(LiteralExpr { value: Some(nil()) })),
         });
         let expected = boolean(false);
         let res = run(&expr);
@@ -585,5 +592,63 @@ mod tests {
         let expected = boolean(false);
         let res = run(&expr);
         assert_eq!(expected, res.unwrap());
+    }
+
+    #[test]
+    fn test_var_stmt() {
+        let interpreter = Interpreter::new();
+        let name = Token::new(TokenType::Identifier, "foo".to_string(), None, 1);
+        let var_stmt = VarStmt {
+            name: name.clone(),
+            initializer: Some(Expr::Literal(LiteralExpr {
+                value: Some(number(10)),
+            })),
+        };
+        assert!(interpreter.visit_var_stmt(&var_stmt).is_ok());
+        assert_eq!(
+            interpreter.environment.borrow().get(&name).unwrap(),
+            Object::Num(10.0)
+        );
+    }
+
+    #[test]
+    fn test_var_stmt_undefined() {
+        let interpreter = Interpreter::new();
+        let name = Token::new(TokenType::Identifier, "foo".to_string(), None, 1);
+        let var_stmt = VarStmt {
+            name: name.clone(),
+            initializer: None,
+        };
+        assert!(interpreter.visit_var_stmt(&var_stmt).is_ok());
+        assert_eq!(
+            interpreter.environment.borrow().get(&name).unwrap(),
+            Object::Nil
+        );
+    }
+
+    #[test]
+    fn test_var_expr() {
+        let interpreter = Interpreter::new();
+        let name = Token::new(TokenType::Identifier, "foo".to_string(), None, 1);
+        let var_stmt = VarStmt {
+            name: name.clone(),
+            initializer: Some(Expr::Literal(LiteralExpr {
+                value: Some(number(10)),
+            })),
+        };
+        assert!(interpreter.visit_var_stmt(&var_stmt).is_ok());
+        let var_expression = VariableExpr { name: name.clone() };
+        assert_eq!(
+            interpreter.visit_variable_expr(&var_expression).unwrap(),
+            Object::Num(10.0)
+        );
+    }
+
+    #[test]
+    fn test_var_expr_undefined() {
+        let interpreter = Interpreter::new();
+        let name = Token::new(TokenType::Identifier, "foo".to_string(), None, 1);
+        let var_expression = VariableExpr { name: name.clone() };
+        assert!(interpreter.visit_variable_expr(&var_expression).is_err());
     }
 }

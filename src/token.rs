@@ -1,5 +1,5 @@
-use core::fmt;
 use crate::object::*;
+use core::fmt;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum TokenType {

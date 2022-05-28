@@ -11,10 +11,7 @@ pub struct Parser {
 
 impl Parser {
     pub fn new(tokens: Vec<Token>) -> Self {
-        Parser {
-            tokens,
-            current: 0,
-        }
+        Parser { tokens, current: 0 }
     }
 
     pub fn parse(&mut self) -> Result<Vec<Stmt>, LoxError> {
@@ -139,12 +136,12 @@ impl Parser {
             None
         };
 
-        self.consume(&TokenType::Semicolon, "Expect ';' after variable declaration".to_string())?;
+        self.consume(
+            &TokenType::Semicolon,
+            "Expect ';' after variable declaration".to_string(),
+        )?;
 
-        Ok(Stmt::Var(VarStmt {
-            name,
-            initializer
-        }))
+        Ok(Stmt::Var(VarStmt { name, initializer }))
     }
 
     fn expression_statement(&mut self) -> Result<Stmt, LoxError> {
@@ -261,7 +258,7 @@ impl Parser {
 
         if self.is_match(&[TokenType::Identifier]) {
             return Ok(Expr::Variable(VariableExpr {
-                name: self.previous()
+                name: self.previous(),
             }));
         }
 
@@ -282,7 +279,7 @@ impl Parser {
         ))
     }
 }
-
+/*
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -347,3 +344,4 @@ mod tests {
         assert_eq!(expected, run(&code));
     }
 }
+*/

@@ -1,9 +1,9 @@
 use std::collections::HashMap;
 
-use crate::token::{TokenType, Token};
-use crate::object::*;
 use crate::error::*;
-use crate::utils::{is_digit, is_alpha, is_alphanumeric};
+use crate::object::*;
+use crate::token::{Token, TokenType};
+use crate::utils::{is_alpha, is_alphanumeric, is_digit};
 
 pub struct Scanner {
     source_code: String,
@@ -63,7 +63,7 @@ impl Scanner {
             token_type,
             lexeme.to_string(),
             literal,
-            self.line
+            self.line,
         ));
     }
 
@@ -117,10 +117,7 @@ impl Scanner {
         self.advance();
 
         let literal = self.source_code[(self.start + 1)..(self.current - 1)].to_string();
-        self.add_token(
-            TokenType::StringLiteral,
-            Some(Object::Str(literal)),
-        );
+        self.add_token(TokenType::StringLiteral, Some(Object::Str(literal)));
 
         Ok(())
     }
@@ -159,7 +156,7 @@ impl Scanner {
             TokenType::True => self.add_token(TokenType::True, Some(Object::Bool(true))),
             TokenType::False => self.add_token(TokenType::False, Some(Object::Bool(false))),
             TokenType::Nil => self.add_token(TokenType::Nil, Some(Object::Nil)),
-            _ => self.add_token_single(token_type)
+            _ => self.add_token_single(token_type),
         }
     }
 
@@ -262,7 +259,7 @@ impl Scanner {
         self.add_token_single(TokenType::EOF);
         match had_error {
             Some(e) => Err(e),
-            _ => Ok(self.tokens.clone())
+            _ => Ok(self.tokens.clone()),
         }
     }
 }
@@ -280,13 +277,23 @@ mod tests {
             Token::new(TokenType::Var, "var".to_string(), None, 1),
             Token::new(TokenType::Identifier, "x".to_string(), None, 1),
             Token::new(TokenType::Equal, "=".to_string(), None, 1),
-            Token::new(TokenType::NumberLiteral, "10".to_string(), Some(Object::Num(10 as f64)), 1),
+            Token::new(
+                TokenType::NumberLiteral,
+                "10".to_string(),
+                Some(Object::Num(10 as f64)),
+                1,
+            ),
             Token::new(TokenType::Semicolon, ";".to_string(), None, 1),
             Token::new(TokenType::EOF, "".to_string(), None, 2),
-        ].into_iter().collect();
+        ]
+        .into_iter()
+        .collect();
 
         let tokens = scanner.tokenize().unwrap();
-        tokens.iter().zip(&expected).for_each(|(a, b)| assert_eq!(a, b));
+        tokens
+            .iter()
+            .zip(&expected)
+            .for_each(|(a, b)| assert_eq!(a, b));
     }
 
     #[test]
@@ -298,13 +305,23 @@ mod tests {
             Token::new(TokenType::Var, "var".to_string(), None, 1),
             Token::new(TokenType::Identifier, "x".to_string(), None, 1),
             Token::new(TokenType::Equal, "=".to_string(), None, 1),
-            Token::new(TokenType::StringLiteral, "\"hallo\"".to_string(), Some(Object::Str("hallo".to_string())), 1),
-            Token::new(TokenType::Semicolon, ";".to_string(),None, 1),
+            Token::new(
+                TokenType::StringLiteral,
+                "\"hallo\"".to_string(),
+                Some(Object::Str("hallo".to_string())),
+                1,
+            ),
+            Token::new(TokenType::Semicolon, ";".to_string(), None, 1),
             Token::new(TokenType::EOF, "".to_string(), None, 2),
-        ].into_iter().collect();
+        ]
+        .into_iter()
+        .collect();
 
         let tokens = scanner.tokenize().unwrap();
-        tokens.iter().zip(&expected).for_each(|(a, b)| assert_eq!(a, b));
+        tokens
+            .iter()
+            .zip(&expected)
+            .for_each(|(a, b)| assert_eq!(a, b));
     }
     #[test]
     fn bool_assignment() {
@@ -315,30 +332,22 @@ mod tests {
             Token::new(TokenType::Var, "var".to_string(), None, 1),
             Token::new(TokenType::Identifier, "x".to_string(), None, 1),
             Token::new(TokenType::Equal, "=".to_string(), None, 1),
-            Token::new(TokenType::True, "true".to_string(), Some(Object::Bool(true)), 1),
+            Token::new(
+                TokenType::True,
+                "true".to_string(),
+                Some(Object::Bool(true)),
+                1,
+            ),
             Token::new(TokenType::Semicolon, ";".to_string(), None, 1),
             Token::new(TokenType::EOF, "".to_string(), None, 2),
-        ].into_iter().collect();
+        ]
+        .into_iter()
+        .collect();
 
         let tokens = scanner.tokenize().unwrap();
-        tokens.iter().zip(&expected).for_each(|(a, b)| assert_eq!(a, b));
+        tokens
+            .iter()
+            .zip(&expected)
+            .for_each(|(a, b)| assert_eq!(a, b));
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

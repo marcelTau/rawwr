@@ -1,6 +1,7 @@
 #![allow(unused_variables, dead_code)]
 
 //mod ast_printer;
+mod environment;
 mod error;
 mod expr;
 mod interpreter;
@@ -69,7 +70,7 @@ fn run(source_code: &str) -> Result<(), LoxError> {
     let mut parser = Parser::new(tokens);
     let statements = parser.parse()?;
 
-    let interpreter = Interpreter {};
+    let interpreter = Interpreter::new();
     if interpreter.interpret(&statements) {
         Ok(())
     } else {
