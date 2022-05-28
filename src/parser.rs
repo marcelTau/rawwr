@@ -7,11 +7,12 @@ use crate::token::*;
 pub struct Parser {
     tokens: Vec<Token>,
     current: usize,
+    had_error: bool
 }
 
 impl Parser {
     pub fn new(tokens: Vec<Token>) -> Self {
-        Parser { tokens, current: 0 }
+        Parser { tokens, current: 0, had_error: false }
     }
 
     pub fn parse(&mut self) -> Result<Vec<Stmt>, LoxError> {
@@ -89,8 +90,17 @@ impl Parser {
         if self.check(token_type) {
             Ok(self.advance()) //@todo maybe clone here
         } else {
-            Err(LoxError::parse_error(&self.peek(), &message))
+            Err(self.error(&self.peek(), &message))
         }
+    }
+
+    fn error(&mut self, token: &Token, message: &str) -> LoxError {
+        self.had_error = true;
+        LoxError::parse_error(token, message)
+    }
+
+    pub fn success(&self) -> bool {
+        !self.had_error
     }
 
     // ------------------------------------------------------------------------

@@ -67,11 +67,12 @@ fn run(source_code: &str) -> Result<(), LoxError> {
     let mut scanner = Scanner::new(source_code);
     let tokens = scanner.tokenize()?;
 
+    let interpreter = Interpreter::new();
     let mut parser = Parser::new(tokens);
     let statements = parser.parse()?;
 
-    let interpreter = Interpreter::new();
-    if interpreter.interpret(&statements) {
+
+    if parser.success() && interpreter.interpret(&statements) {
         Ok(())
     } else {
         Err(LoxError::scanner_error(
