@@ -15,7 +15,7 @@ pub struct Scanner {
 }
 
 impl Scanner {
-    pub fn new(source_code: &String) -> Self {
+    pub fn new(source_code: &str) -> Self {
         let keywords = HashMap::from([
             ("and".to_string(), TokenType::And),
             ("class".to_string(), TokenType::Class),
@@ -36,7 +36,7 @@ impl Scanner {
         ]);
         Scanner {
             tokens: Vec::<Token>::new(),
-            source_code: source_code.clone(),
+            source_code: source_code.to_string(),
             current: 0,
             start: 0,
             line: 1,
@@ -51,7 +51,7 @@ impl Scanner {
     fn advance(&mut self) -> char {
         let c = self.source_code.chars().nth(self.current).unwrap();
         self.current += 1;
-        return c;
+        c
     }
 
     fn add_token(&mut self, token_type: TokenType, literal: Option<Object>) {
@@ -119,7 +119,7 @@ impl Scanner {
         let literal = self.source_code[(self.start + 1)..(self.current - 1)].to_string();
         self.add_token(
             TokenType::StringLiteral,
-            Some(Object::Str(literal.to_string().clone())),
+            Some(Object::Str(literal)),
         );
 
         Ok(())
@@ -254,12 +254,9 @@ impl Scanner {
 
         while !self.is_at_end() {
             self.start = self.current;
-            match self.scan_token() {
-                Err(e) => {
-                    e.report("");
-                    had_error = Some(e);
-                }
-                _ => ()
+            if let Err(e) = self.scan_token() {
+                e.report("");
+                had_error = Some(e);
             }
         }
         self.add_token_single(TokenType::EOF);

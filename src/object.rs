@@ -15,7 +15,7 @@ impl fmt::Display for Object {
         match self {
             Object::Num(x) => write!(f, "{x}"),
             Object::Str(x) => write!(f, "{x}"),
-            Object::Bool(x) => write!(f, "{}", x.to_string()),
+            Object::Bool(x) => write!(f, "{}", x),
             Object::Nil => write!(f, "nil"),
             Object::ArithmeticError => write!(f, "ArithmeticError"),
             Object::DivByZeroError => write!(f, "DivByZeroError"),

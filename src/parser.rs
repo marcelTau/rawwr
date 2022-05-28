@@ -12,7 +12,7 @@ pub struct Parser {
 impl Parser {
     pub fn new(tokens: Vec<Token>) -> Self {
         Parser {
-            tokens: tokens.clone(),
+            tokens,
             current: 0,
         }
     }
@@ -27,7 +27,7 @@ impl Parser {
         Ok(statements)
     }
 
-    fn is_match(&mut self, token_types: &Vec<TokenType>) -> bool {
+    fn is_match(&mut self, token_types: &[TokenType]) -> bool {
         for t in token_types {
             if self.check(t) {
                 self.advance();
@@ -103,7 +103,7 @@ impl Parser {
     }
 
     fn declaration(&mut self) -> Result<Stmt, LoxError> {
-        let result = if self.is_match(&vec![TokenType::Var]) {
+        let result = if self.is_match(&[TokenType::Var]) {
             self.var_declaration()
         } else {
             self.statement()
@@ -117,7 +117,7 @@ impl Parser {
     }
 
     fn statement(&mut self) -> Result<Stmt, LoxError> {
-        if self.is_match(&vec![TokenType::Print]) {
+        if self.is_match(&[TokenType::Print]) {
             self.print_statement()
         } else {
             self.expression_statement()
@@ -133,7 +133,7 @@ impl Parser {
     fn var_declaration(&mut self) -> Result<Stmt, LoxError> {
         let name = self.consume(&TokenType::Identifier, "Expect variable name.".to_string())?;
 
-        let initializer = if self.is_match(&vec![TokenType::Equal]) {
+        let initializer = if self.is_match(&[TokenType::Equal]) {
             Some(self.expression()?)
         } else {
             None
@@ -159,7 +159,7 @@ impl Parser {
     fn equality(&mut self) -> Result<Expr, LoxError> {
         let mut expr = self.comparison()?;
 
-        while self.is_match(&vec![TokenType::BangEqual, TokenType::EqualEqual]) {
+        while self.is_match(&[TokenType::BangEqual, TokenType::EqualEqual]) {
             let operator = self.previous();
             let right = self.comparison()?;
             expr = Expr::Binary(BinaryExpr {
@@ -175,7 +175,7 @@ impl Parser {
     fn comparison(&mut self) -> Result<Expr, LoxError> {
         let mut expr = self.term()?;
 
-        while self.is_match(&vec![
+        while self.is_match(&[
             TokenType::Greater,
             TokenType::GreaterEqual,
             TokenType::Less,
@@ -196,7 +196,7 @@ impl Parser {
     fn term(&mut self) -> Result<Expr, LoxError> {
         let mut expr = self.factor()?;
 
-        while self.is_match(&vec![TokenType::Minus, TokenType::Plus]) {
+        while self.is_match(&[TokenType::Minus, TokenType::Plus]) {
             let operator = self.previous();
             let right = self.factor()?;
             expr = Expr::Binary(BinaryExpr {
@@ -211,7 +211,7 @@ impl Parser {
     fn factor(&mut self) -> Result<Expr, LoxError> {
         let mut expr = self.unary()?;
 
-        while self.is_match(&vec![TokenType::Star, TokenType::Slash]) {
+        while self.is_match(&[TokenType::Star, TokenType::Slash]) {
             let operator = self.previous();
             let right = self.unary()?;
             expr = Expr::Binary(BinaryExpr {
@@ -225,7 +225,7 @@ impl Parser {
     }
 
     fn unary(&mut self) -> Result<Expr, LoxError> {
-        if self.is_match(&vec![TokenType::Bang, TokenType::Minus]) {
+        if self.is_match(&[TokenType::Bang, TokenType::Minus]) {
             let operator = self.previous();
             let right = self.unary()?;
             Ok(Expr::Unary(UnaryExpr {
@@ -238,34 +238,34 @@ impl Parser {
     }
 
     fn primary(&mut self) -> Result<Expr, LoxError> {
-        if self.is_match(&vec![TokenType::False]) {
+        if self.is_match(&[TokenType::False]) {
             return Ok(Expr::Literal(LiteralExpr {
                 value: Some(Object::Bool(false)),
             }));
         }
-        if self.is_match(&vec![TokenType::True]) {
+        if self.is_match(&[TokenType::True]) {
             return Ok(Expr::Literal(LiteralExpr {
                 value: Some(Object::Bool(true)),
             }));
         }
-        if self.is_match(&vec![TokenType::Nil]) {
+        if self.is_match(&[TokenType::Nil]) {
             return Ok(Expr::Literal(LiteralExpr {
                 value: Some(Object::Nil),
             }));
         }
-        if self.is_match(&vec![TokenType::StringLiteral, TokenType::NumberLiteral]) {
+        if self.is_match(&[TokenType::StringLiteral, TokenType::NumberLiteral]) {
             return Ok(Expr::Literal(LiteralExpr {
                 value: self.previous().literal,
             }));
         }
 
-        if self.is_match(&vec![TokenType::Identifier]) {
+        if self.is_match(&[TokenType::Identifier]) {
             return Ok(Expr::Variable(VariableExpr {
                 name: self.previous()
             }));
         }
 
-        if self.is_match(&vec![TokenType::LeftParen]) {
+        if self.is_match(&[TokenType::LeftParen]) {
             let expr = self.expression()?;
             self.consume(
                 &TokenType::RightParen,
@@ -276,10 +276,10 @@ impl Parser {
             }));
         }
 
-        return Err(LoxError::parse_error(
+        Err(LoxError::parse_error(
             &self.tokens[self.current],
             "Expect Expression",
-        ));
+        ))
     }
 }
 
