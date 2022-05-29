@@ -106,6 +106,7 @@ fn main() -> Result<(), std::io::Error> {
         "Binary   : Box<Expr> left, Token operator, Box<Expr> right".to_string(),
         "Grouping : Box<Expr> expression".to_string(),
         "Literal  : Option<Object> value".to_string(),
+        "Logical  : Box<Expr> left, Token operator, Box<Expr> right".to_string(),
         "Unary    : Token operator, Box<Expr> right".to_string(),
         "Variable : Token name".to_string(),
     ])?;

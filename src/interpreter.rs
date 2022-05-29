@@ -113,6 +113,22 @@ impl ExprVisitor<Object> for Interpreter {
             .assign(&expr.name, value.clone())?;
         Ok(value)
     }
+
+    fn visit_logical_expr(&self, expr: &LogicalExpr) -> Result<Object, LoxError> {
+        let left = self.evaluate(&expr.left)?;
+
+        if expr.operator.token_type == TokenType::Or {
+            if self.is_truthy(&left) {
+                return Ok(left);
+            }
+        } else {
+            if !self.is_truthy(&left) {
+                return Ok(left);
+            }
+        }
+
+        self.evaluate(&expr.right)
+    }
 }
 
 impl Interpreter {
@@ -639,7 +655,7 @@ mod tests {
         };
         assert!(interpreter.visit_var_stmt(&var_stmt).is_ok());
         assert_eq!(
-            interpreter.environment.borrow().get(&name).unwrap(),
+            interpreter.environment.borrow().borrow().get(&name).unwrap(),
             Object::Num(10.0)
         );
     }
@@ -654,7 +670,7 @@ mod tests {
         };
         assert!(interpreter.visit_var_stmt(&var_stmt).is_ok());
         assert_eq!(
-            interpreter.environment.borrow().get(&name).unwrap(),
+            interpreter.environment.borrow().borrow().get(&name).unwrap(),
             Object::Nil
         );
     }
