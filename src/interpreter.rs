@@ -132,8 +132,35 @@ impl ExprVisitor<Object> for Interpreter {
                 return Ok(left);
             }
         }
-
         self.evaluate(&expr.right)
+    }
+
+    fn visit_call_expr(&self, expr: &CallExpr) -> Result<Object, LoxError> {
+        let callee = self.evaluate(&expr.callee)?;
+        let mut arguments = Vec::new();
+
+        for argument in &expr.arguments {
+            arguments.push(self.evaluate(argument)?);
+        }
+
+        if let Object::Func(function) = callee {
+            if arguments.len() != function.func.arity() {
+                return Err(LoxError::runtime_error(
+                    &expr.paren,
+                    &format!(
+                        "Expected {} arguments but got {}.",
+                        function.func.arity(),
+                        arguments.len()
+                    ),
+                ))
+            }
+            function.func.call(self, arguments)
+        } else {
+            Err(LoxError::runtime_error(
+                &expr.paren,
+                "Can only call functions and classes",
+            ))
+        }
     }
 }
 

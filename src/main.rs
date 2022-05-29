@@ -11,6 +11,7 @@ mod scanner;
 mod stmt;
 mod token;
 mod utils;
+mod callable;
 
 use error::*;
 use interpreter::*;

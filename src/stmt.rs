@@ -1,8 +1,8 @@
 #![allow(unused_imports)]
+use crate::token::*;
+use crate::object::*;
 use crate::error::*;
 use crate::expr::*;
-use crate::object::*;
-use crate::token::*;
 
 pub enum Stmt {
     Block(BlockStmt),
@@ -97,3 +97,4 @@ impl WhileStmt {
         visitor.visit_while_stmt(self)
     }
 }
+

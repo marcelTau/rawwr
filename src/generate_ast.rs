@@ -20,6 +20,8 @@ pub fn generate_ast(
     writeln!(file, "use crate::error::*;")?;
     if base_name == "Stmt" {
         writeln!(file, "use crate::expr::*;")?;
+    } else if base_name == "Expr" {
+        writeln!(file, "use std::rc::Rc;")?;
     }
 
     let mut ttypes: Vec<Type> = vec![];
@@ -104,6 +106,7 @@ fn main() -> Result<(), std::io::Error> {
     generate_ast("./src".to_string(), "Expr".to_string(), &vec![
         "Assign   : Token name, Box<Expr> value".to_string(),
         "Binary   : Box<Expr> left, Token operator, Box<Expr> right".to_string(),
+        "Call     : Rc<Expr> callee, Token paren, Vec<Expr> arguments".to_string(),
         "Grouping : Box<Expr> expression".to_string(),
         "Literal  : Option<Object> value".to_string(),
         "Logical  : Box<Expr> left, Token operator, Box<Expr> right".to_string(),

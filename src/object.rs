@@ -1,10 +1,12 @@
 use core::fmt;
+use crate::callable::Callable;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Object {
     Num(f64),
     Str(String),
     Bool(bool),
+    Func(Callable),
     Nil,
     ArithmeticError,
     DivByZeroError,
@@ -16,6 +18,7 @@ impl fmt::Display for Object {
             Object::Num(x) => write!(f, "{x}"),
             Object::Str(x) => write!(f, "{x}"),
             Object::Bool(x) => write!(f, "{}", x),
+            Object::Func(_) => write!(f, "<func>"),
             Object::Nil => write!(f, "nil"),
             Object::ArithmeticError => write!(f, "ArithmeticError"),
             Object::DivByZeroError => write!(f, "DivByZeroError"),

@@ -4,6 +4,8 @@ use crate::object::*;
 use crate::stmt::*;
 use crate::token::*;
 
+use std::rc::Rc;
+
 pub struct Parser {
     tokens: Vec<Token>,
     current: usize,
@@ -430,8 +432,44 @@ impl Parser {
                 right: Box::new(right),
             }))
         } else {
-            self.primary()
+            self.call()
         }
+    }
+
+    fn call(&mut self) -> Result<Expr, LoxError> {
+        let mut expr = self.primary()?;
+
+        loop {
+            if self.is_match(&[TokenType::LeftParen]) {
+                expr = self.finish_call(&Rc::new(expr))?;
+            } else {
+                break;
+            }
+        }
+
+        Ok(expr)
+    }
+
+    fn finish_call(&mut self, callee: &Rc<Expr>) -> Result<Expr, LoxError> {
+        let mut arguments = Vec::new();
+
+        if !self.check(&TokenType::RightParen) {
+            arguments.push(self.expression()?);
+            while self.is_match(&[TokenType::Comma]) {
+                if arguments.len() >= 255 {
+                    self.error(&self.peek(), "You can't have more than 255 arguments.");
+                }
+                arguments.push(self.expression()?);
+            }
+        }
+
+        let paren = self.consume(&TokenType::RightParen, "Expect ')' after arguments.".to_string())?;
+
+        Ok(Expr::Call(CallExpr {
+            callee: Rc::clone(callee),
+            paren,
+            arguments
+        }))
     }
 
     fn primary(&mut self) -> Result<Expr, LoxError> {
