@@ -111,6 +111,7 @@ fn main() -> Result<(), std::io::Error> {
     ])?;
 
     generate_ast("./src".to_string(), "Stmt".to_string(), &vec![
+        "Block          : Vec<Stmt> statements".to_string(),
         "Expression     : Expr expression".to_string(),
         "Print          : Expr expression".to_string(),
         "Var            : Token name, Option<Expr> initializer".to_string(),
