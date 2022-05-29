@@ -40,6 +40,16 @@ impl StmtVisitor<()> for Interpreter {
         let e = Environment::new_with_enclosing(self.environment.borrow().clone());
         self.execute_block(&stmt.statements, e)
     }
+
+    fn visit_if_stmt(&self, stmt: &IfStmt) -> Result<(), LoxError> {
+        if self.is_truthy(&self.evaluate(&stmt.condition)?) {
+            self.execute(&stmt.then_branch)
+        } else if let Some(else_branch) = &stmt.else_branch {
+            self.execute(else_branch)
+        } else {
+            Ok(())
+        }
+    }
 }
 
 impl ExprVisitor<Object> for Interpreter {

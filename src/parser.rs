@@ -128,15 +128,43 @@ impl Parser {
     }
 
     fn statement(&mut self) -> Result<Stmt, LoxError> {
-        if self.is_match(&[TokenType::Print]) {
-            self.print_statement()
-        } else if self.is_match(&[TokenType::LeftBrace]) {
-            Ok(Stmt::Block(BlockStmt {
-                statements: self.block()?,
-            }))
-        } else {
-            self.expression_statement()
+        if self.is_match(&[TokenType::If]) {
+            return self.if_statement();
         }
+
+        if self.is_match(&[TokenType::Print]) {
+            return self.print_statement();
+        }
+
+        if self.is_match(&[TokenType::LeftBrace]) {
+            return Ok(Stmt::Block(BlockStmt {
+                statements: self.block()?,
+            }));
+        }
+
+        self.expression_statement()
+    }
+
+    fn if_statement(&mut self) -> Result<Stmt, LoxError> {
+        self.consume(&TokenType::LeftParen, "Expect '(' after 'if'.".to_string())?;
+        let condition = self.expression()?;
+        self.consume(
+            &TokenType::RightParen,
+            "Expect ')' after if condition.".to_string(),
+        )?;
+
+        let then_branch = Box::new(self.statement()?);
+        let else_branch = if self.is_match(&[TokenType::Else]) {
+            Some(Box::new(self.statement()?))
+        } else {
+            None
+        };
+
+        Ok(Stmt::If(IfStmt {
+            condition,
+            then_branch,
+            else_branch,
+        }))
     }
 
     fn print_statement(&mut self) -> Result<Stmt, LoxError> {
@@ -177,7 +205,10 @@ impl Parser {
         while !self.check(&TokenType::RightBrace) && !self.is_at_end() {
             statements.push(self.declaration()?);
         }
-        self.consume(&TokenType::RightBrace, "Expect '}' after block.".to_string())?;
+        self.consume(
+            &TokenType::RightBrace,
+            "Expect '}' after block.".to_string(),
+        )?;
         Ok(statements)
     }
 
