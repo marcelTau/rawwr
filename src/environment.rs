@@ -2,10 +2,10 @@ use crate::error::*;
 use crate::object::*;
 use crate::token::*;
 
+use std::cell::RefCell;
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 use std::rc::Rc;
-use std::cell::RefCell;
 
 #[derive(Debug)]
 pub struct Environment {
@@ -17,14 +17,14 @@ impl Environment {
     pub fn new() -> Self {
         Environment {
             values: HashMap::new(),
-            enclosing: None
+            enclosing: None,
         }
     }
 
     pub fn new_with_enclosing(enclosing: Rc<RefCell<Environment>>) -> Self {
         Environment {
             values: HashMap::new(),
-            enclosing: Some(enclosing)
+            enclosing: Some(enclosing),
         }
     }
 
@@ -77,7 +77,10 @@ mod tests {
     fn can_enclose_an_environment() {
         let env = Rc::new(RefCell::new(Environment::new()));
         let inner = Environment::new_with_enclosing(Rc::clone(&env));
-        assert_eq!(inner.enclosing.unwrap().borrow().values, env.borrow().values);
+        assert_eq!(
+            inner.enclosing.unwrap().borrow().values,
+            env.borrow().values
+        );
     }
 
     #[test]
@@ -92,23 +95,3 @@ mod tests {
         assert_eq!(outter_env.borrow().get(&token).unwrap(), Object::Num(20.0));
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

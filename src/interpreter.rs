@@ -50,6 +50,12 @@ impl StmtVisitor<()> for Interpreter {
             Ok(())
         }
     }
+    fn visit_while_stmt(&self, stmt: &WhileStmt) -> Result<(), LoxError> {
+        while self.is_truthy(&self.evaluate(&stmt.condition)?) {
+            self.execute(&stmt.body)?;
+        }
+        Ok(())
+    }
 }
 
 impl ExprVisitor<Object> for Interpreter {
@@ -655,7 +661,12 @@ mod tests {
         };
         assert!(interpreter.visit_var_stmt(&var_stmt).is_ok());
         assert_eq!(
-            interpreter.environment.borrow().borrow().get(&name).unwrap(),
+            interpreter
+                .environment
+                .borrow()
+                .borrow()
+                .get(&name)
+                .unwrap(),
             Object::Num(10.0)
         );
     }
@@ -670,7 +681,12 @@ mod tests {
         };
         assert!(interpreter.visit_var_stmt(&var_stmt).is_ok());
         assert_eq!(
-            interpreter.environment.borrow().borrow().get(&name).unwrap(),
+            interpreter
+                .environment
+                .borrow()
+                .borrow()
+                .get(&name)
+                .unwrap(),
             Object::Nil
         );
     }

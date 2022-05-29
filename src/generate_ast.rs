@@ -117,6 +117,7 @@ fn main() -> Result<(), std::io::Error> {
         "If             : Expr condition, Box<Stmt> then_branch, Option<Box<Stmt>> else_branch".to_string(),
         "Print          : Expr expression".to_string(),
         "Var            : Token name, Option<Expr> initializer".to_string(),
+        "While          : Expr condition, Box<Stmt> body".to_string(),
     ])?;
 
     Ok(())
