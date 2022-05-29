@@ -1,7 +1,7 @@
 #![allow(unused_imports)]
-use crate::token::*;
-use crate::object::*;
 use crate::error::*;
+use crate::object::*;
+use crate::token::*;
 
 pub enum Expr {
     Assign(AssignExpr),
@@ -111,4 +111,3 @@ impl VariableExpr {
         visitor.visit_variable_expr(self)
     }
 }
-

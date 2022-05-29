@@ -128,6 +128,10 @@ impl Parser {
     }
 
     fn statement(&mut self) -> Result<Stmt, LoxError> {
+        if self.is_match(&[TokenType::For]) {
+            return self.for_statement();
+        }
+
         if self.is_match(&[TokenType::If]) {
             return self.if_statement();
         }
@@ -147,6 +151,69 @@ impl Parser {
         }
 
         self.expression_statement()
+    }
+
+    fn for_statement(&mut self) -> Result<Stmt, LoxError> {
+        self.consume(&TokenType::LeftParen, "Expect '(' after 'for'.".to_string())?;
+
+        let initializer = if self.is_match(&[TokenType::Semicolon]) {
+            None
+        } else if self.is_match(&[TokenType::Var]) {
+            Some(self.var_declaration()?)
+        } else {
+            Some(self.expression_statement()?)
+        };
+
+        //let condition = if !self.check(&TokenType::Semicolon) {
+        //Some(self.expression()?)
+        //} else {
+        //None
+        //};
+
+        let condition = if !self.check(&TokenType::Semicolon) {
+            self.expression()?
+        } else {
+            Expr::Literal(LiteralExpr {
+                value: Some(Object::Bool(true)),
+            })
+        };
+
+        self.consume(
+            &TokenType::Semicolon,
+            "Expect ';' after loop condition".to_string(),
+        )?;
+
+        let increment = if !self.check(&TokenType::RightParen) {
+            Some(self.expression()?)
+        } else {
+            None
+        };
+
+        self.consume(
+            &TokenType::RightParen,
+            "Expect ')' after for clauses".to_string(),
+        )?;
+
+        let mut body = self.statement()?;
+
+        if let Some(inc) = increment {
+            body = Stmt::Block(BlockStmt {
+                statements: vec![body, Stmt::Expression(ExpressionStmt { expression: inc })],
+            });
+        };
+
+        body = Stmt::While(WhileStmt {
+            condition,
+            body: Box::new(body),
+        });
+
+        if let Some(init) = initializer {
+            body = Stmt::Block(BlockStmt {
+                statements: vec![init, body],
+            });
+        };
+
+        Ok(body)
     }
 
     fn if_statement(&mut self) -> Result<Stmt, LoxError> {
@@ -195,7 +262,10 @@ impl Parser {
     }
 
     fn while_statement(&mut self) -> Result<Stmt, LoxError> {
-        self.consume(&TokenType::LeftParen, "Expect '(' after 'while'.".to_string())?;
+        self.consume(
+            &TokenType::LeftParen,
+            "Expect '(' after 'while'.".to_string(),
+        )?;
         let condition = self.expression()?;
         self.consume(
             &TokenType::RightParen,
@@ -206,7 +276,7 @@ impl Parser {
 
         Ok(Stmt::While(WhileStmt {
             condition,
-            body: Box::new(body)
+            body: Box::new(body),
         }))
     }
 
