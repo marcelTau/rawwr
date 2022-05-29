@@ -1,7 +1,7 @@
 
 [Current Chapter](https://craftinginterpreters.com/scanning.html#reserved-words-and-identifiers): reserved-words-and-identifiers
 
-
+11 min 17
 
 
 ## Terms

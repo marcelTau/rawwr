@@ -14,7 +14,7 @@ pub trait LoxCallable {
 #[derive(Clone)]
 pub struct Callable {
     pub func: Rc<dyn LoxCallable>,
-    arity: usize,
+    pub arity: usize,
 }
 
 impl LoxCallable for Callable {

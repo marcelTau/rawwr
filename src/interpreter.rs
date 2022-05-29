@@ -7,9 +7,11 @@ use crate::expr::*;
 use crate::object::Object;
 use crate::stmt::*;
 use crate::token::TokenType;
+use crate::callable::*;
 
 pub struct Interpreter {
     environment: RefCell<Rc<RefCell<Environment>>>,
+    globals: RefCell<Rc<RefCell<Environment>>>,
 }
 
 impl StmtVisitor<()> for Interpreter {
@@ -164,10 +166,30 @@ impl ExprVisitor<Object> for Interpreter {
     }
 }
 
+use std::time::{SystemTime, UNIX_EPOCH};
+struct ClockFunc;
+impl LoxCallable for ClockFunc {
+    fn call(&self, interpreter: &Interpreter, arguments: Vec<Object>) -> Result<Object, LoxError> {
+        let start = SystemTime::now();
+        let secs = start.duration_since(UNIX_EPOCH).unwrap().as_secs();
+        Ok(Object::Num(secs as f64))
+    }
+    fn arity(&self) -> usize {
+        0
+    }
+}
+
 impl Interpreter {
     pub fn new() -> Self {
+        let e = RefCell::new(Rc::new(RefCell::new(Environment::new())));
+        let g = e.clone();
+        g.borrow().borrow_mut().define("clock", Object::Func(Callable {
+            func: Rc::new(ClockFunc),
+            arity: 0
+        }));
         Interpreter {
-            environment: RefCell::new(Rc::new(RefCell::new(Environment::new()))),
+            environment: e,
+            globals: g
         }
     }
 

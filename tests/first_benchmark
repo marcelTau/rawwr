@@ -1,0 +1,17 @@
+var start = clock();
+
+var a = 0;
+var temp;
+
+for (var b = 1; a < 1000000000; b = temp + b) {
+    print a;
+    temp = a;
+    a = b;
+}
+
+var end = clock();
+
+var res = end - start;
+
+print "Time to complete:";
+print res;
