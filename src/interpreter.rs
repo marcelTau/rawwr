@@ -59,6 +59,10 @@ impl StmtVisitor<()> for Interpreter {
         }
         Ok(())
     }
+
+    fn visit_function_stmt(&self, stmt: &FunctionStmt) -> Result<(), LoxError> {
+        Ok(())
+    }
 }
 
 impl ExprVisitor<Object> for Interpreter {
