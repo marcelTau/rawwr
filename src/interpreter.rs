@@ -8,10 +8,11 @@ use crate::object::Object;
 use crate::stmt::*;
 use crate::token::TokenType;
 use crate::callable::*;
+use crate::native_functions::*;
 
 pub struct Interpreter {
     environment: RefCell<Rc<RefCell<Environment>>>,
-    globals: RefCell<Rc<RefCell<Environment>>>,
+    globals: Rc<RefCell<Environment>>,
 }
 
 impl StmtVisitor<()> for Interpreter {
@@ -166,37 +167,22 @@ impl ExprVisitor<Object> for Interpreter {
     }
 }
 
-use std::time::{SystemTime, UNIX_EPOCH};
-struct ClockFunc;
-impl LoxCallable for ClockFunc {
-    fn call(&self, interpreter: &Interpreter, arguments: Vec<Object>) -> Result<Object, LoxError> {
-        let start = SystemTime::now();
-        let secs = start.duration_since(UNIX_EPOCH).unwrap().as_secs();
-        Ok(Object::Num(secs as f64))
-    }
-    fn arity(&self) -> usize {
-        0
-    }
-}
-
 impl Interpreter {
     pub fn new() -> Self {
-        let e = RefCell::new(Rc::new(RefCell::new(Environment::new())));
-        let g = e.clone();
-        g.borrow().borrow_mut().define("clock", Object::Func(Callable {
-            func: Rc::new(ClockFunc),
-            arity: 0
+        let globals = Rc::new(RefCell::new(Environment::new()));
+        globals.borrow_mut().define("clock", Object::Func(Callable {
+            func: Rc::new(NativeClock),
         }));
+
         Interpreter {
-            environment: e,
-            globals: g
+            globals: Rc::clone(&globals),
+            environment: RefCell::new(Rc::clone(&globals)),
         }
     }
 
     pub fn interpret(&self, statements: &[Stmt]) -> bool {
         for statement in statements {
             if let Err(e) = self.execute(statement) {
-                //e.report("");
                 return false;
             }
         }

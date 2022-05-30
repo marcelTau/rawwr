@@ -12,6 +12,7 @@ mod stmt;
 mod token;
 mod utils;
 mod callable;
+mod native_functions;
 
 use error::*;
 use interpreter::*;
@@ -38,7 +39,7 @@ impl Lox {
     fn run_file(&mut self, path: &str) -> io::Result<()> {
         let content = fs::read_to_string(path)?;
 
-        if self.run(&content).is_ok() {
+        if self.run(&content).is_err() {
             std::process::exit(1);
         }
 

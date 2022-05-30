@@ -38,6 +38,16 @@ impl LoxError {
         e
     }
 
+    pub fn system_error(message: &str) -> LoxError {
+        let e = LoxError {
+            token: None,
+            line: -1,
+            message: message.to_string()
+        };
+        e.report("");
+        e
+    }
+
     pub fn report(&self, msg: &str) {
         if let Some(token) = &self.token {
             if token.token_type == TokenType::EOF {
