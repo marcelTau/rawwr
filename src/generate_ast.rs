@@ -20,6 +20,7 @@ pub fn generate_ast(
     writeln!(file, "use crate::error::*;")?;
     if base_name == "Stmt" {
         writeln!(file, "use crate::expr::*;")?;
+        writeln!(file, "use std::rc::Rc;")?;
     } else if base_name == "Expr" {
         writeln!(file, "use std::rc::Rc;")?;
     }
@@ -117,7 +118,7 @@ fn main() -> Result<(), std::io::Error> {
     generate_ast("./src".to_string(), "Stmt".to_string(), &vec![
         "Block          : Vec<Stmt> statements".to_string(),
         "Expression     : Expr expression".to_string(),
-        "Function       : Token name, Vec<Token> params, Vec<Stmt> body".to_string(),
+        "Function       : Token name, Rc<Vec<Token>> params, Rc<Vec<Stmt>> body".to_string(),
         "If             : Expr condition, Box<Stmt> then_branch, Option<Box<Stmt>> else_branch".to_string(),
         "Print          : Expr expression".to_string(),
         "Var            : Token name, Option<Expr> initializer".to_string(),

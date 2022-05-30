@@ -295,24 +295,40 @@ impl Parser {
 
     fn function(&mut self, kind: &str) -> Result<Stmt, LoxError> {
         let name = self.consume(&TokenType::Identifier, format!("Expect {kind} name."))?;
-        self.consume(&TokenType::LeftParen, format!("Expect '(' after {kind} name."))?;
+        self.consume(
+            &TokenType::LeftParen,
+            format!("Expect '(' after {kind} name."),
+        )?;
 
         let mut params = Vec::new();
 
         if !self.check(&TokenType::RightParen) {
-            params.push(self.consume(&TokenType::Identifier, "Expect parameter name.".to_string())?);
+            params
+                .push(self.consume(&TokenType::Identifier, "Expect parameter name.".to_string())?);
             while self.is_match(&[TokenType::Comma]) {
                 if params.len() >= 255 {
                     self.error(&self.peek(), "You can't have more than 255 parameters.");
                 }
-                params.push(self.consume(&TokenType::Identifier, "Expect parameter name.".to_string())?);
+                params.push(
+                    self.consume(&TokenType::Identifier, "Expect parameter name.".to_string())?,
+                );
             }
         }
-        self.consume(&TokenType::RightParen, "Expect ')' after parameters.".to_string())?;
-        self.consume(&TokenType::LeftBrace, format!("Expect '{{' before {kind} body."))?;
+        self.consume(
+            &TokenType::RightParen,
+            "Expect ')' after parameters.".to_string(),
+        )?;
+        self.consume(
+            &TokenType::LeftBrace,
+            format!("Expect '{{' before {kind} body."),
+        )?;
 
         let body = self.block()?;
-        Ok(Stmt::Function(FunctionStmt { name, params, body }))
+        Ok(Stmt::Function(FunctionStmt {
+            name,
+            params: Rc::new(params),
+            body: Rc::new(body),
+        }))
     }
 
     fn block(&mut self) -> Result<Vec<Stmt>, LoxError> {
@@ -487,12 +503,15 @@ impl Parser {
             }
         }
 
-        let paren = self.consume(&TokenType::RightParen, "Expect ')' after arguments.".to_string())?;
+        let paren = self.consume(
+            &TokenType::RightParen,
+            "Expect ')' after arguments.".to_string(),
+        )?;
 
         Ok(Expr::Call(CallExpr {
             callee: Rc::clone(callee),
             paren,
-            arguments
+            arguments,
         }))
     }
 

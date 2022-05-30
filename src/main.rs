@@ -13,6 +13,7 @@ mod token;
 mod utils;
 mod callable;
 mod native_functions;
+mod function;
 
 use error::*;
 use interpreter::*;

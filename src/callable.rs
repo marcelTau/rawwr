@@ -5,8 +5,7 @@ use crate::object::Object;
 use std::rc::Rc;
 use core::fmt;
 
-
-pub trait LoxCallable {
+pub trait LoxCallable: fmt::Display {
     fn call(&self, interpreter: &Interpreter, arguments: Vec<Object>) -> Result<Object, LoxError>;
     fn arity(&self) -> usize;
 }
@@ -26,9 +25,14 @@ impl LoxCallable for Callable {
     }
 }
 
+impl fmt::Display for Callable {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.func)
+    }
+}
 impl fmt::Debug for Callable {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "<callable>")
+        write!(f, "{}", self.func)
     }
 }
 
