@@ -1,6 +1,5 @@
 use std::cell::RefCell;
 use std::rc::Rc;
-use std::ops::Deref;
 
 use crate::environment::*;
 use crate::error::LoxError;
@@ -181,6 +180,12 @@ impl Interpreter {
         globals.borrow_mut().define("clock", Object::Func(Callable {
             func: Rc::new(NativeClock),
         }));
+
+        globals.borrow_mut().define("num_to_str", Object::Func(Callable {
+            func: Rc::new(NativeNumToString),
+        }));
+
+        println!("{:?}", globals);
 
         Interpreter {
             globals: Rc::clone(&globals),

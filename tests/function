@@ -1,11 +1,15 @@
-
 var global_variable = "world";
+
+fun foo(n) {
+    print "This is iteration #" + num_to_str(n);
+}
 
 fun main() {
     var local_variable = "hello ";
 
     for (var i = 0; i < 10; i = i + 1) {
         print local_variable + global_variable + "!";
+        foo(i);
     }
 }
 

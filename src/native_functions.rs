@@ -26,3 +26,22 @@ impl fmt::Display for NativeClock {
         write!(f, "<native function>")
     }
 }
+
+
+pub struct NativeNumToString;
+
+impl LoxCallable for NativeNumToString {
+    fn call(&self, _interpreter: &Interpreter, arguments: Vec<Object>) -> Result<Object, LoxError> {
+        Ok(Object::Str(format!("{}", arguments[0])))
+    }
+
+    fn arity(&self) -> usize {
+        1
+    }
+}
+
+impl fmt::Display for NativeNumToString {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "<native function>")
+    }
+}
