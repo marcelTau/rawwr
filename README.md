@@ -1,7 +1,7 @@
 
 [Current Chapter](https://craftinginterpreters.com/scanning.html#reserved-words-and-identifiers): reserved-words-and-identifiers
 
-12 min 19
+12 min 54
 refactor error handling
 
 
