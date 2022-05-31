@@ -1,6 +1,5 @@
 use core::fmt;
 use std::rc::Rc;
-use std::ops::Deref;
 
 use crate::callable::*;
 use crate::error::*;
@@ -27,7 +26,7 @@ impl Function {
 }
 
 impl LoxCallable for Function {
-    fn call(&self, interpreter: &Interpreter, arguments: Vec<Object>) -> Result<Object, LoxError> {
+    fn call(&self, interpreter: &Interpreter, arguments: Vec<Object>) -> Result<Object, LoxResult> {
         let mut env = Environment::new_with_enclosing(Rc::clone(&interpreter.globals));
 
         self.params.len();

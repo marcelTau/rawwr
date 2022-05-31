@@ -44,7 +44,7 @@ pub fn generate_ast(
     writeln!(file, "impl {} {{", base_name)?;
     writeln!(
         file,
-        "    pub fn accept<T>(&self, visitor: &dyn {}Visitor<T>) -> Result<T, LoxError> {{",
+        "    pub fn accept<T>(&self, visitor: &dyn {}Visitor<T>) -> Result<T, LoxResult> {{",
         base_name
     )?;
     writeln!(file, "        match self {{")?;
@@ -73,7 +73,7 @@ pub fn generate_ast(
     for t in &ttypes {
         writeln!(
             file,
-            "    fn visit_{}_{}(&self, {}: &{}{}) -> Result<T, LoxError>;",
+            "    fn visit_{}_{}(&self, {}: &{}{}) -> Result<T, LoxResult>;",
             t.base_name.to_lowercase(),
             base_name.to_lowercase(),
             base_name.to_lowercase(),
@@ -87,7 +87,7 @@ pub fn generate_ast(
         writeln!(file, "impl {}{} {{", t.base_name, base_name)?;
         writeln!(
             file,
-            "    pub fn accept<T>(&self, visitor: &dyn {}Visitor<T>) -> Result<T, LoxError> {{",
+            "    pub fn accept<T>(&self, visitor: &dyn {}Visitor<T>) -> Result<T, LoxResult> {{",
             base_name
         )?;
         writeln!(
@@ -121,6 +121,7 @@ fn main() -> Result<(), std::io::Error> {
         "Function       : Token name, Rc<Vec<Token>> params, Rc<Vec<Stmt>> body".to_string(),
         "If             : Expr condition, Box<Stmt> then_branch, Option<Box<Stmt>> else_branch".to_string(),
         "Print          : Expr expression".to_string(),
+        "Return         : Token keyword, Option<Expr> value".to_string(),
         "Var            : Token name, Option<Expr> initializer".to_string(),
         "While          : Expr condition, Box<Stmt> body".to_string(),
     ])?;

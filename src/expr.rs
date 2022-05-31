@@ -16,7 +16,7 @@ pub enum Expr {
 }
 
 impl Expr {
-    pub fn accept<T>(&self, visitor: &dyn ExprVisitor<T>) -> Result<T, LoxError> {
+    pub fn accept<T>(&self, visitor: &dyn ExprVisitor<T>) -> Result<T, LoxResult> {
         match self {
             Expr::Assign(x) => x.accept(visitor),
             Expr::Binary(x) => x.accept(visitor),
@@ -70,60 +70,60 @@ pub struct VariableExpr {
 }
 
 pub trait ExprVisitor<T> {
-    fn visit_assign_expr(&self, expr: &AssignExpr) -> Result<T, LoxError>;
-    fn visit_binary_expr(&self, expr: &BinaryExpr) -> Result<T, LoxError>;
-    fn visit_call_expr(&self, expr: &CallExpr) -> Result<T, LoxError>;
-    fn visit_grouping_expr(&self, expr: &GroupingExpr) -> Result<T, LoxError>;
-    fn visit_literal_expr(&self, expr: &LiteralExpr) -> Result<T, LoxError>;
-    fn visit_logical_expr(&self, expr: &LogicalExpr) -> Result<T, LoxError>;
-    fn visit_unary_expr(&self, expr: &UnaryExpr) -> Result<T, LoxError>;
-    fn visit_variable_expr(&self, expr: &VariableExpr) -> Result<T, LoxError>;
+    fn visit_assign_expr(&self, expr: &AssignExpr) -> Result<T, LoxResult>;
+    fn visit_binary_expr(&self, expr: &BinaryExpr) -> Result<T, LoxResult>;
+    fn visit_call_expr(&self, expr: &CallExpr) -> Result<T, LoxResult>;
+    fn visit_grouping_expr(&self, expr: &GroupingExpr) -> Result<T, LoxResult>;
+    fn visit_literal_expr(&self, expr: &LiteralExpr) -> Result<T, LoxResult>;
+    fn visit_logical_expr(&self, expr: &LogicalExpr) -> Result<T, LoxResult>;
+    fn visit_unary_expr(&self, expr: &UnaryExpr) -> Result<T, LoxResult>;
+    fn visit_variable_expr(&self, expr: &VariableExpr) -> Result<T, LoxResult>;
 }
 
 impl AssignExpr {
-    pub fn accept<T>(&self, visitor: &dyn ExprVisitor<T>) -> Result<T, LoxError> {
+    pub fn accept<T>(&self, visitor: &dyn ExprVisitor<T>) -> Result<T, LoxResult> {
         visitor.visit_assign_expr(self)
     }
 }
 
 impl BinaryExpr {
-    pub fn accept<T>(&self, visitor: &dyn ExprVisitor<T>) -> Result<T, LoxError> {
+    pub fn accept<T>(&self, visitor: &dyn ExprVisitor<T>) -> Result<T, LoxResult> {
         visitor.visit_binary_expr(self)
     }
 }
 
 impl CallExpr {
-    pub fn accept<T>(&self, visitor: &dyn ExprVisitor<T>) -> Result<T, LoxError> {
+    pub fn accept<T>(&self, visitor: &dyn ExprVisitor<T>) -> Result<T, LoxResult> {
         visitor.visit_call_expr(self)
     }
 }
 
 impl GroupingExpr {
-    pub fn accept<T>(&self, visitor: &dyn ExprVisitor<T>) -> Result<T, LoxError> {
+    pub fn accept<T>(&self, visitor: &dyn ExprVisitor<T>) -> Result<T, LoxResult> {
         visitor.visit_grouping_expr(self)
     }
 }
 
 impl LiteralExpr {
-    pub fn accept<T>(&self, visitor: &dyn ExprVisitor<T>) -> Result<T, LoxError> {
+    pub fn accept<T>(&self, visitor: &dyn ExprVisitor<T>) -> Result<T, LoxResult> {
         visitor.visit_literal_expr(self)
     }
 }
 
 impl LogicalExpr {
-    pub fn accept<T>(&self, visitor: &dyn ExprVisitor<T>) -> Result<T, LoxError> {
+    pub fn accept<T>(&self, visitor: &dyn ExprVisitor<T>) -> Result<T, LoxResult> {
         visitor.visit_logical_expr(self)
     }
 }
 
 impl UnaryExpr {
-    pub fn accept<T>(&self, visitor: &dyn ExprVisitor<T>) -> Result<T, LoxError> {
+    pub fn accept<T>(&self, visitor: &dyn ExprVisitor<T>) -> Result<T, LoxResult> {
         visitor.visit_unary_expr(self)
     }
 }
 
 impl VariableExpr {
-    pub fn accept<T>(&self, visitor: &dyn ExprVisitor<T>) -> Result<T, LoxError> {
+    pub fn accept<T>(&self, visitor: &dyn ExprVisitor<T>) -> Result<T, LoxResult> {
         visitor.visit_variable_expr(self)
     }
 }

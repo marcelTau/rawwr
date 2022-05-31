@@ -102,7 +102,7 @@ impl Scanner {
         self.line += 1;
     }
 
-    fn string(&mut self) -> Result<(), LoxError> {
+    fn string(&mut self) -> Result<(), LoxResult> {
         while self.peek() != '"' && !self.is_at_end() {
             if self.peek() == '\n' {
                 self.new_line();
@@ -111,7 +111,7 @@ impl Scanner {
         }
 
         if self.is_at_end() {
-            return Err(LoxError::scanner_error(self.line, "Unterminated String."));
+            return Err(LoxResult::scanner_error(self.line as usize, "Unterminated String."));
         }
 
         self.advance();
@@ -160,7 +160,7 @@ impl Scanner {
         }
     }
 
-    fn scan_token(&mut self) -> Result<(), LoxError> {
+    fn scan_token(&mut self) -> Result<(), LoxResult> {
         let c: char = self.advance();
 
         match c {
@@ -235,15 +235,15 @@ impl Scanner {
                 } else if is_alpha(c) {
                     self.identifier();
                 } else {
-                    return Err(LoxError::scanner_error(self.line, "Unexpected Character"));
+                    return Err(LoxResult::scanner_error(self.line as usize, "Unexpected Character"));
                 }
             }
         }
         Ok(())
     }
 
-    pub fn tokenize(&mut self) -> Result<Vec<Token>, LoxError> {
-        let mut had_error: Option<LoxError> = None;
+    pub fn tokenize(&mut self) -> Result<Vec<Token>, LoxResult> {
+        let mut had_error: Option<LoxResult> = None;
 
         let emit_token = |token_type: TokenType| {
             let lexeme = &self.source_code[self.start..self.current];

@@ -32,25 +32,25 @@ impl Environment {
         self.values.insert(name.to_string(), value);
     }
 
-    pub fn get(&self, name: &Token) -> Result<Object, LoxError> {
+    pub fn get(&self, name: &Token) -> Result<Object, LoxResult> {
         if let Some(object) = self.values.get(&name.lexeme) {
             Ok(object.clone())
         } else if let Some(enclosing) = &self.enclosing {
             enclosing.borrow().get(name)
         } else {
             let err_msg = format!("GET: Undefined variable '{}'.", &name.lexeme);
-            Err(LoxError::runtime_error(name, &err_msg))
+            Err(LoxResult::runtime_error(name, &err_msg))
         }
     }
 
-    pub fn assign(&mut self, name: &Token, value: Object) -> Result<(), LoxError> {
+    pub fn assign(&mut self, name: &Token, value: Object) -> Result<(), LoxResult> {
         if let Entry::Occupied(mut object) = self.values.entry(name.lexeme.clone()) {
             object.insert(value);
             Ok(())
         } else if let Some(enclosing) = &self.enclosing {
             enclosing.borrow_mut().assign(name, value)
         } else {
-            Err(LoxError::runtime_error(
+            Err(LoxResult::runtime_error(
                 name,
                 &format!("ASSIGN: Undefined variable '{}'.", &name.lexeme),
             ))

@@ -58,7 +58,7 @@ impl Lox {
         }
     }
 
-    fn run(&mut self, source_code: &str) -> Result<(), LoxError> {
+    fn run(&mut self, source_code: &str) -> Result<(), LoxResult> {
         let mut scanner = Scanner::new(source_code);
         let tokens = scanner.tokenize()?;
 

@@ -6,7 +6,7 @@ use std::rc::Rc;
 use core::fmt;
 
 pub trait LoxCallable: fmt::Display {
-    fn call(&self, interpreter: &Interpreter, arguments: Vec<Object>) -> Result<Object, LoxError>;
+    fn call(&self, interpreter: &Interpreter, arguments: Vec<Object>) -> Result<Object, LoxResult>;
     fn arity(&self) -> usize;
 }
 
@@ -16,7 +16,7 @@ pub struct Callable {
 }
 
 impl LoxCallable for Callable {
-    fn call(&self, interpreter: &Interpreter, arguments: Vec<Object>) -> Result<Object, LoxError> {
+    fn call(&self, interpreter: &Interpreter, arguments: Vec<Object>) -> Result<Object, LoxResult> {
         self.func.call(interpreter, arguments)
     }
 
