@@ -2,20 +2,72 @@
 use crate::token::*;
 use crate::object::*;
 use crate::error::*;
-use crate::expr::*;
 use std::rc::Rc;
+use std::hash::{Hash, Hasher};
+use crate::expr::*;
 
 pub enum Stmt {
-    Block(BlockStmt),
-    Expression(ExpressionStmt),
-    Function(FunctionStmt),
-    If(IfStmt),
-    Print(PrintStmt),
-    Return(ReturnStmt),
-    Var(VarStmt),
-    While(WhileStmt),
+    Block(Rc<BlockStmt>),
+    Expression(Rc<ExpressionStmt>),
+    Function(Rc<FunctionStmt>),
+    If(Rc<IfStmt>),
+    Print(Rc<PrintStmt>),
+    Return(Rc<ReturnStmt>),
+    Var(Rc<VarStmt>),
+    While(Rc<WhileStmt>),
 }
 
+impl PartialEq for Stmt {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+                  (Stmt::Block(a), Stmt::Block(b)) => Rc::ptr_eq(a, b),
+                  (Stmt::Expression(a), Stmt::Expression(b)) => Rc::ptr_eq(a, b),
+                  (Stmt::Function(a), Stmt::Function(b)) => Rc::ptr_eq(a, b),
+                  (Stmt::If(a), Stmt::If(b)) => Rc::ptr_eq(a, b),
+                  (Stmt::Print(a), Stmt::Print(b)) => Rc::ptr_eq(a, b),
+                  (Stmt::Return(a), Stmt::Return(b)) => Rc::ptr_eq(a, b),
+                  (Stmt::Var(a), Stmt::Var(b)) => Rc::ptr_eq(a, b),
+                  (Stmt::While(a), Stmt::While(b)) => Rc::ptr_eq(a, b),
+                  _ => false,
+        }
+    }
+}
+
+impl Eq for Stmt{}
+
+impl Hash for Stmt {
+    fn hash<H>(&self, hasher: &mut H)
+    where
+        H: Hasher,
+    {
+        match self {
+        Stmt::Block(a) => {
+            hasher.write_usize(Rc::as_ptr(a) as usize);
+        },
+        Stmt::Expression(a) => {
+            hasher.write_usize(Rc::as_ptr(a) as usize);
+        },
+        Stmt::Function(a) => {
+            hasher.write_usize(Rc::as_ptr(a) as usize);
+        },
+        Stmt::If(a) => {
+            hasher.write_usize(Rc::as_ptr(a) as usize);
+        },
+        Stmt::Print(a) => {
+            hasher.write_usize(Rc::as_ptr(a) as usize);
+        },
+        Stmt::Return(a) => {
+            hasher.write_usize(Rc::as_ptr(a) as usize);
+        },
+        Stmt::Var(a) => {
+            hasher.write_usize(Rc::as_ptr(a) as usize);
+        },
+        Stmt::While(a) => {
+            hasher.write_usize(Rc::as_ptr(a) as usize);
+        },
+    }
+    }
+}
 impl Stmt {
     pub fn accept<T>(&self, wrapper: &Rc<Stmt>, visitor: &dyn StmtVisitor<T>) -> Result<T, LoxResult> {
         match self {

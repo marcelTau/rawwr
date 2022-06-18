@@ -3,18 +3,70 @@ use crate::token::*;
 use crate::object::*;
 use crate::error::*;
 use std::rc::Rc;
+use std::hash::{Hash, Hasher};
 
 pub enum Expr {
-    Assign(AssignExpr),
-    Binary(BinaryExpr),
-    Call(CallExpr),
-    Grouping(GroupingExpr),
-    Literal(LiteralExpr),
-    Logical(LogicalExpr),
-    Unary(UnaryExpr),
-    Variable(VariableExpr),
+    Assign(Rc<AssignExpr>),
+    Binary(Rc<BinaryExpr>),
+    Call(Rc<CallExpr>),
+    Grouping(Rc<GroupingExpr>),
+    Literal(Rc<LiteralExpr>),
+    Logical(Rc<LogicalExpr>),
+    Unary(Rc<UnaryExpr>),
+    Variable(Rc<VariableExpr>),
 }
 
+impl PartialEq for Expr {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+                  (Expr::Assign(a), Expr::Assign(b)) => Rc::ptr_eq(a, b),
+                  (Expr::Binary(a), Expr::Binary(b)) => Rc::ptr_eq(a, b),
+                  (Expr::Call(a), Expr::Call(b)) => Rc::ptr_eq(a, b),
+                  (Expr::Grouping(a), Expr::Grouping(b)) => Rc::ptr_eq(a, b),
+                  (Expr::Literal(a), Expr::Literal(b)) => Rc::ptr_eq(a, b),
+                  (Expr::Logical(a), Expr::Logical(b)) => Rc::ptr_eq(a, b),
+                  (Expr::Unary(a), Expr::Unary(b)) => Rc::ptr_eq(a, b),
+                  (Expr::Variable(a), Expr::Variable(b)) => Rc::ptr_eq(a, b),
+                  _ => false,
+        }
+    }
+}
+
+impl Eq for Expr{}
+
+impl Hash for Expr {
+    fn hash<H>(&self, hasher: &mut H)
+    where
+        H: Hasher,
+    {
+        match self {
+        Expr::Assign(a) => {
+            hasher.write_usize(Rc::as_ptr(a) as usize);
+        },
+        Expr::Binary(a) => {
+            hasher.write_usize(Rc::as_ptr(a) as usize);
+        },
+        Expr::Call(a) => {
+            hasher.write_usize(Rc::as_ptr(a) as usize);
+        },
+        Expr::Grouping(a) => {
+            hasher.write_usize(Rc::as_ptr(a) as usize);
+        },
+        Expr::Literal(a) => {
+            hasher.write_usize(Rc::as_ptr(a) as usize);
+        },
+        Expr::Logical(a) => {
+            hasher.write_usize(Rc::as_ptr(a) as usize);
+        },
+        Expr::Unary(a) => {
+            hasher.write_usize(Rc::as_ptr(a) as usize);
+        },
+        Expr::Variable(a) => {
+            hasher.write_usize(Rc::as_ptr(a) as usize);
+        },
+    }
+    }
+}
 impl Expr {
     pub fn accept<T>(&self, wrapper: &Rc<Expr>, visitor: &dyn ExprVisitor<T>) -> Result<T, LoxResult> {
         match self {

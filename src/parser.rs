@@ -153,9 +153,9 @@ impl Parser {
         }
 
         if self.is_match(&[TokenType::LeftBrace]) {
-            return Ok(Rc::new(Stmt::Block(BlockStmt {
+            return Ok(Rc::new(Stmt::Block(Rc::new(BlockStmt {
                 statements: Rc::new(self.block()?),
-            })));
+            }))));
         }
         self.expression_statement()
     }
@@ -174,9 +174,9 @@ impl Parser {
         let condition = if !self.check(&TokenType::Semicolon) {
             self.expression()?
         } else {
-            Expr::Literal(LiteralExpr {
+            Expr::Literal(Rc::new(LiteralExpr {
                 value: Some(Object::Bool(true)),
-            })
+            }))
         };
 
         self.consume(
@@ -198,25 +198,25 @@ impl Parser {
         let mut body = self.statement()?;
 
         if let Some(inc) = increment {
-            body = Rc::new(Stmt::Block(BlockStmt {
+            body = Rc::new(Stmt::Block(Rc::new(BlockStmt {
                 statements: Rc::new(vec![
                     body,
-                    Rc::new(Stmt::Expression(ExpressionStmt {
+                    Rc::new(Stmt::Expression(Rc::new(ExpressionStmt {
                         expression: Rc::new(inc),
-                    })),
+                    }))),
                 ]),
-            }));
+            })));
         };
 
-        body = Rc::new(Stmt::While(WhileStmt {
+        body = Rc::new(Stmt::While(Rc::new(WhileStmt {
             condition: Rc::new(condition),
             body
-        }));
+        })));
 
         if let Some(init) = initializer {
-            body = Rc::new(Stmt::Block(BlockStmt {
+            body = Rc::new(Stmt::Block(Rc::new(BlockStmt {
                 statements: Rc::new(vec![init, body]),
-            }));
+            })));
         };
 
         Ok(body)
@@ -237,19 +237,19 @@ impl Parser {
             None
         };
 
-        Ok(Stmt::If(IfStmt {
+        Ok(Stmt::If(Rc::new(IfStmt {
             condition: Rc::new(condition),
             then_branch,
             else_branch,
-        }))
+        })))
     }
 
     fn print_statement(&mut self) -> Result<Stmt, LoxResult> {
         let value = self.expression()?;
         self.consume(&TokenType::Semicolon, "Expect ';' after value.".to_string())?;
-        Ok(Stmt::Print(PrintStmt {
+        Ok(Stmt::Print(Rc::new(PrintStmt {
             expression: Rc::new(value),
-        }))
+        })))
     }
 
     fn return_statement(&mut self) -> Result<Stmt, LoxResult> {
@@ -265,7 +265,7 @@ impl Parser {
             &TokenType::Semicolon,
             "Expect ';' after return value.".to_string(),
         )?;
-        Ok(Stmt::Return(ReturnStmt { keyword, value }))
+        Ok(Stmt::Return(Rc::new(ReturnStmt { keyword, value })))
     }
 
     fn var_declaration(&mut self) -> Result<Rc<Stmt>, LoxResult> {
@@ -282,7 +282,7 @@ impl Parser {
             "Expect ';' after variable declaration".to_string(),
         )?;
 
-        Ok(Rc::new(Stmt::Var(VarStmt { name, initializer })))
+        Ok(Rc::new(Stmt::Var(Rc::new(VarStmt { name, initializer }))))
     }
 
     fn while_statement(&mut self) -> Result<Stmt, LoxResult> {
@@ -298,10 +298,10 @@ impl Parser {
 
         let body = self.statement()?;
 
-        Ok(Stmt::While(WhileStmt {
+        Ok(Stmt::While(Rc::new(WhileStmt {
             condition: Rc::new(condition),
             body
-        }))
+        })))
     }
 
     fn expression_statement(&mut self) -> Result<Rc<Stmt>, LoxResult> {
@@ -310,7 +310,7 @@ impl Parser {
             &TokenType::Semicolon,
             "Expect ';' after expression.".to_string(),
         )?;
-        Ok(Rc::new(Stmt::Expression(ExpressionStmt { expression: Rc::new(expr) })))
+        Ok(Rc::new(Stmt::Expression(Rc::new(ExpressionStmt { expression: Rc::new(expr) }))))
     }
 
     fn function(&mut self, kind: &str) -> Result<Rc<Stmt>, LoxResult> {
@@ -344,11 +344,11 @@ impl Parser {
         )?;
 
         let body = self.block()?;
-        Ok(Rc::new(Stmt::Function(FunctionStmt {
+        Ok(Rc::new(Stmt::Function(Rc::new(FunctionStmt {
             name,
             params: Rc::new(params),
             body: Rc::new(body),
-        })))
+        }))))
     }
 
     fn block(&mut self) -> Result<Vec<Rc<Stmt>>, LoxResult> {
@@ -372,10 +372,10 @@ impl Parser {
             let value = self.assignment()?;
 
             if let Expr::Variable(expr) = expr {
-                return Ok(Expr::Assign(AssignExpr {
-                    name: expr.name,
+                return Ok(Expr::Assign(Rc::new(AssignExpr {
+                    name: expr.name.clone(),
                     value: Rc::new(value),
-                }));
+                })));
             }
             self.error(&equals, "Invalid assignment target");
         }
@@ -389,11 +389,11 @@ impl Parser {
         while self.is_match(&[TokenType::Or]) {
             let operator = self.previous();
             let right = self.and()?;
-            expr = Expr::Logical(LogicalExpr {
+            expr = Expr::Logical(Rc::new(LogicalExpr {
                 left: Rc::new(expr),
                 operator,
                 right: Rc::new(right),
-            });
+            }));
         }
 
         Ok(expr)
@@ -405,11 +405,11 @@ impl Parser {
         while self.is_match(&[TokenType::And]) {
             let operator = self.previous();
             let right = self.equality()?;
-            expr = Expr::Logical(LogicalExpr {
+            expr = Expr::Logical(Rc::new(LogicalExpr {
                 left: Rc::new(expr),
                 operator,
                 right: Rc::new(right),
-            });
+            }));
         }
 
         Ok(expr)
@@ -421,11 +421,11 @@ impl Parser {
         while self.is_match(&[TokenType::BangEqual, TokenType::EqualEqual]) {
             let operator = self.previous();
             let right = self.comparison()?;
-            expr = Expr::Binary(BinaryExpr {
+            expr = Expr::Binary(Rc::new(BinaryExpr {
                 left: Rc::new(expr),
                 operator,
                 right: Rc::new(right),
-            });
+            }));
         }
 
         Ok(expr)
@@ -442,11 +442,11 @@ impl Parser {
         ]) {
             let operator = self.previous();
             let right = self.term()?;
-            expr = Expr::Binary(BinaryExpr {
+            expr = Expr::Binary(Rc::new(BinaryExpr {
                 left: Rc::new(expr),
                 operator,
                 right: Rc::new(right),
-            });
+            }));
         }
 
         Ok(expr)
@@ -458,11 +458,11 @@ impl Parser {
         while self.is_match(&[TokenType::Minus, TokenType::Plus]) {
             let operator = self.previous();
             let right = self.factor()?;
-            expr = Expr::Binary(BinaryExpr {
+            expr = Expr::Binary(Rc::new(BinaryExpr {
                 left: Rc::new(expr),
                 operator,
                 right: Rc::new(right),
-            })
+            }))
         }
         Ok(expr)
     }
@@ -473,11 +473,11 @@ impl Parser {
         while self.is_match(&[TokenType::Star, TokenType::Slash]) {
             let operator = self.previous();
             let right = self.unary()?;
-            expr = Expr::Binary(BinaryExpr {
+            expr = Expr::Binary(Rc::new(BinaryExpr {
                 left: Rc::new(expr),
                 operator,
                 right: Rc::new(right),
-            })
+            }))
         }
 
         Ok(expr)
@@ -487,10 +487,10 @@ impl Parser {
         if self.is_match(&[TokenType::Bang, TokenType::Minus]) {
             let operator = self.previous();
             let right = self.unary()?;
-            Ok(Expr::Unary(UnaryExpr {
+            Ok(Expr::Unary(Rc::new(UnaryExpr {
                 operator,
                 right: Rc::new(right),
-            }))
+            })))
         } else {
             self.call()
         }
@@ -528,39 +528,39 @@ impl Parser {
             "Expect ')' after arguments.".to_string(),
         )?;
 
-        Ok(Expr::Call(CallExpr {
+        Ok(Expr::Call(Rc::new(CallExpr {
             callee: Rc::clone(callee),
             paren,
             arguments,
-        }))
+        })))
     }
 
     fn primary(&mut self) -> Result<Expr, LoxResult> {
         if self.is_match(&[TokenType::False]) {
-            return Ok(Expr::Literal(LiteralExpr {
+            return Ok(Expr::Literal(Rc::new(LiteralExpr {
                 value: Some(Object::Bool(false)),
-            }));
+            })));
         }
         if self.is_match(&[TokenType::True]) {
-            return Ok(Expr::Literal(LiteralExpr {
+            return Ok(Expr::Literal(Rc::new(LiteralExpr {
                 value: Some(Object::Bool(true)),
-            }));
+            })));
         }
         if self.is_match(&[TokenType::Nil]) {
-            return Ok(Expr::Literal(LiteralExpr {
+            return Ok(Expr::Literal(Rc::new(LiteralExpr {
                 value: Some(Object::Nil),
-            }));
+            })));
         }
         if self.is_match(&[TokenType::StringLiteral, TokenType::NumberLiteral]) {
-            return Ok(Expr::Literal(LiteralExpr {
+            return Ok(Expr::Literal(Rc::new(LiteralExpr {
                 value: self.previous().literal,
-            }));
+            })));
         }
 
         if self.is_match(&[TokenType::Identifier]) {
-            return Ok(Expr::Variable(VariableExpr {
+            return Ok(Expr::Variable(Rc::new(VariableExpr {
                 name: self.previous(),
-            }));
+            })));
         }
 
         if self.is_match(&[TokenType::LeftParen]) {
@@ -569,9 +569,9 @@ impl Parser {
                 &TokenType::RightParen,
                 "Expect ')' after expression.".to_string(),
             )?;
-            return Ok(Expr::Grouping(GroupingExpr {
+            return Ok(Expr::Grouping(Rc::new(GroupingExpr {
                 expression: Rc::new(expr),
-            }));
+            })));
         }
 
         Err(LoxResult::parse_error(

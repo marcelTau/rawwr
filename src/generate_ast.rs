@@ -18,11 +18,12 @@ pub fn generate_ast(
     writeln!(file, "use crate::token::*;")?;
     writeln!(file, "use crate::object::*;")?;
     writeln!(file, "use crate::error::*;")?;
+    writeln!(file, "use std::rc::Rc;")?;
+    writeln!(file, "use std::hash::{{Hash, Hasher}};")?;
     if base_name == "Stmt" {
         writeln!(file, "use crate::expr::*;")?;
-        writeln!(file, "use std::rc::Rc;")?;
     } else if base_name == "Expr" {
-        writeln!(file, "use std::rc::Rc;")?;
+        // writeln!(file, "use std::hash::{{Hash, Hasher}};")?;
     }
 
     let mut ttypes: Vec<Type> = vec![];
@@ -37,9 +38,45 @@ pub fn generate_ast(
 
     writeln!(file, "\npub enum {} {{", base_name)?;
     for t in &ttypes {
-        writeln!(file, "    {}({}{}),", t.base_name, t.base_name, base_name)?;
+        //if base_name == "Expr" {
+            writeln!(file, "    {}(Rc<{}{}>),", t.base_name, t.base_name, base_name)?;
+        //} else {
+            //writeln!(file, "    {}({}{}),", t.base_name, t.base_name, base_name)?;
+        //}
     }
     writeln!(file, "}}\n")?;
+
+    //if base_name == "Expr" {
+    writeln!(file, "impl PartialEq for {} {{", base_name)?;
+    writeln!(file, "    fn eq(&self, other: &Self) -> bool {{")?;
+    writeln!(file, "        match (self, other) {{")?;
+
+    for t in &ttypes {
+        writeln!(file, "                  ({0}::{1}(a), {0}::{1}(b)) => Rc::ptr_eq(a, b),", base_name, t.base_name)?;
+    }
+    writeln!(file,"                  _ => false,")?;
+    writeln!(file, "        }}")?;
+    writeln!(file, "    }}")?;
+    writeln!(file, "}}")?;
+
+
+    writeln!(file, "\nimpl Eq for {}{{}}\n", base_name)?;
+    writeln!(file, "impl Hash for {} {{", base_name)?;
+    writeln!(file, "    fn hash<H>(&self, hasher: &mut H)")?;
+    writeln!(file, "    where")?;
+    writeln!(file, "        H: Hasher,")?;
+    writeln!(file, "    {{")?;
+    writeln!(file, "        match self {{")?;
+    for t in &ttypes {
+        writeln!(file, "        {base_name}::{}(a) => {{", t.base_name)?;
+        writeln!(file, "            hasher.write_usize(Rc::as_ptr(a) as usize);")?;
+        writeln!(file, "        }},")?;
+    }
+    writeln!(file, "    }}")?;
+    writeln!(file, "    }}")?;
+    writeln!(file, "}}")?;
+    //}
+
 
     writeln!(file, "impl {} {{", base_name)?;
     writeln!(

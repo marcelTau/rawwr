@@ -1,7 +1,7 @@
 use crate::object::*;
 use core::fmt;
 
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, Copy, Clone)]
 pub enum TokenType {
     // Single-character tokens.
     LeftParen,

@@ -112,7 +112,7 @@ impl Resolver {
     fn resolve_local(&self, expr: &Rc<Expr>, name: &Token) {
         for (scope, map) in self.scopes.borrow().iter().rev().enumerate() {
             if map.contains_key(&name.lexeme) {
-                self.interpreter.resolve(expr, scope);
+                self.interpreter.resolve(expr.clone(), scope); // @todo no clone here probably
                 return;
             }
         }

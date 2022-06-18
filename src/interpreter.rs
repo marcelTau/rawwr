@@ -233,7 +233,7 @@ impl Interpreter {
         !matches!(object, Object::Nil | Object::Bool(false))
     }
 
-    pub fn resolve(&self, expr: &Rc<Expr>, depth: usize) {
+    pub fn resolve(&self, expr: Rc<Expr>, depth: usize) {
         self.locals.borrow_mut().insert(expr, depth);
     }
 }
