@@ -15,7 +15,7 @@ use crate::function::*;
 pub struct Interpreter {
     environment: RefCell<Rc<RefCell<Environment>>>,
     pub globals: Rc<RefCell<Environment>>,
-    locals: RefCell<HashMap<Expr, usize>>,
+    locals: RefCell<HashMap<Rc<Expr>, usize>>,
 }
 
 impl StmtVisitor<()> for Interpreter {
@@ -233,8 +233,8 @@ impl Interpreter {
         !matches!(object, Object::Nil | Object::Bool(false))
     }
 
-    pub fn resolve(&self, expr: &Expr, depth: usize) {
-        // self.locals.borrow_mut().insert(expr, depth);
+    pub fn resolve(&self, expr: &Rc<Expr>, depth: usize) {
+        self.locals.borrow_mut().insert(expr, depth);
     }
 }
 

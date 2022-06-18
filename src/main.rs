@@ -14,20 +14,17 @@ mod utils;
 mod callable;
 mod native_functions;
 mod function;
-// mod resolver;
+mod resolver;
 
 use error::*;
 use interpreter::*;
 use parser::*;
 use scanner::*;
 
-use std::rc::Rc;
-
 use std::env;
 use std::fs;
 use std::io;
 use std::io::Write;
-
 use std::cmp::Ordering;
 
 struct Lox {
