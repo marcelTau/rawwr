@@ -85,9 +85,9 @@ impl Resolver {
         if !self.scopes.borrow().is_empty() {
             self.scopes
                 .borrow_mut()
-                .last()
+                .last_mut()
                 .unwrap()
-                .insert(name.lexeme, false);
+                .insert(name.lexeme.clone(), false);
         }
     }
 
@@ -95,9 +95,9 @@ impl Resolver {
         if !self.scopes.borrow().is_empty() {
             self.scopes
                 .borrow_mut()
-                .last()
+                .last_mut()
                 .unwrap()
-                .insert(name.lexeme, true);
+                .insert(name.lexeme.clone(), true);
         }
     }
 

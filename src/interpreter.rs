@@ -28,11 +28,12 @@ impl StmtVisitor<()> for Interpreter {
     }
 
     fn visit_var_stmt(&self, stmt: &VarStmt) -> Result<(), LoxResult> {
-        let value = if let Some(initializer) = &stmt.initializer {
+        let value: Object = if let Some(initializer) = &stmt.initializer {
             self.evaluate(initializer)?
         } else {
             Object::Nil
         };
+
         self.environment
             .borrow()
             .borrow_mut()
@@ -62,7 +63,7 @@ impl StmtVisitor<()> for Interpreter {
     }
 
     fn visit_function_stmt(&self, stmt: &FunctionStmt) -> Result<(), LoxResult> {
-        let function = Function::new(stmt, &self.environment.borrow());
+        let function = Function::new(stmt, &*self.environment.borrow());
         self.environment.borrow().borrow_mut().define(stmt.name.lexeme.as_str(), Object::Func(Callable { func: Rc::new(function) }));
         Ok(())
     }
@@ -193,7 +194,7 @@ impl Interpreter {
             func: Rc::new(NativeNumToString),
         }));
 
-        println!("{:?}", globals);
+        // println!("{:?}", globals);
 
         Interpreter {
             globals: Rc::clone(&globals),
