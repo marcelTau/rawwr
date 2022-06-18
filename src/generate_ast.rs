@@ -44,15 +44,15 @@ pub fn generate_ast(
     writeln!(file, "impl {} {{", base_name)?;
     writeln!(
         file,
-        "    pub fn accept<T>(&self, visitor: &dyn {}Visitor<T>) -> Result<T, LoxResult> {{",
+        "    pub fn accept<T>(&self, wrapper: &Rc<{0}>, visitor: &dyn {0}Visitor<T>) -> Result<T, LoxResult> {{",
         base_name
     )?;
     writeln!(file, "        match self {{")?;
     for t in &ttypes {
         writeln!(
             file,
-            "            {}::{}(x) => x.accept(visitor),",
-            base_name, t.base_name
+            "            {}::{}(x) => visitor.visit_{}_{}(wrapper, &x),",
+            base_name, t.base_name, t.base_name.to_lowercase(), base_name.to_lowercase()
         )?;
     }
     writeln!(file, "        }}")?;
@@ -73,9 +73,8 @@ pub fn generate_ast(
     for t in &ttypes {
         writeln!(
             file,
-            "    fn visit_{}_{}(&self, {}: &{}{}) -> Result<T, LoxResult>;",
+            "    fn visit_{0}_{1}(&self, wrapper: &Rc<{3}>, {1}: &{2}{3}) -> Result<T, LoxResult>;",
             t.base_name.to_lowercase(),
-            base_name.to_lowercase(),
             base_name.to_lowercase(),
             t.base_name,
             base_name,
@@ -83,6 +82,7 @@ pub fn generate_ast(
     }
     writeln!(file, "}}\n")?;
 
+    /*
     for t in &ttypes {
         writeln!(file, "impl {}{} {{", t.base_name, base_name)?;
         writeln!(
@@ -99,31 +99,31 @@ pub fn generate_ast(
         writeln!(file, "    }}")?;
         writeln!(file, "}}\n")?;
     }
-
+        */
     Ok(())
 }
 
 fn main() -> Result<(), std::io::Error> {
     generate_ast("./src".to_string(), "Expr".to_string(), &vec![
-        "Assign   : Token name, Box<Expr> value".to_string(),
-        "Binary   : Box<Expr> left, Token operator, Box<Expr> right".to_string(),
-        "Call     : Rc<Expr> callee, Token paren, Vec<Expr> arguments".to_string(),
-        "Grouping : Box<Expr> expression".to_string(),
+        "Assign   : Token name, Rc<Expr> value".to_string(),
+        "Binary   : Rc<Expr> left, Token operator, Rc<Expr> right".to_string(),
+        "Call     : Rc<Expr> callee, Token paren, Vec<Rc<Expr>> arguments".to_string(),
+        "Grouping : Rc<Expr> expression".to_string(),
         "Literal  : Option<Object> value".to_string(),
-        "Logical  : Box<Expr> left, Token operator, Box<Expr> right".to_string(),
-        "Unary    : Token operator, Box<Expr> right".to_string(),
+        "Logical  : Rc<Expr> left, Token operator, Rc<Expr> right".to_string(),
+        "Unary    : Token operator, Rc<Expr> right".to_string(),
         "Variable : Token name".to_string(),
     ])?;
 
     generate_ast("./src".to_string(), "Stmt".to_string(), &vec![
-        "Block          : Vec<Stmt> statements".to_string(),
-        "Expression     : Expr expression".to_string(),
-        "Function       : Token name, Rc<Vec<Token>> params, Rc<Vec<Stmt>> body".to_string(),
-        "If             : Expr condition, Box<Stmt> then_branch, Option<Box<Stmt>> else_branch".to_string(),
-        "Print          : Expr expression".to_string(),
-        "Return         : Token keyword, Option<Expr> value".to_string(),
-        "Var            : Token name, Option<Expr> initializer".to_string(),
-        "While          : Expr condition, Box<Stmt> body".to_string(),
+        "Block          : Rc<Vec<Rc<Stmt>>> statements".to_string(),
+        "Expression     : Rc<Expr> expression".to_string(),
+        "Function       : Token name, Rc<Vec<Token>> params, Rc<Vec<Rc<Stmt>>> body".to_string(),
+        "If             : Rc<Expr> condition, Rc<Stmt> then_branch, Option<Rc<Stmt>> else_branch".to_string(),
+        "Print          : Rc<Expr> expression".to_string(),
+        "Return         : Token keyword, Option<Rc<Expr>> value".to_string(),
+        "Var            : Token name, Option<Rc<Expr>> initializer".to_string(),
+        "While          : Rc<Expr> condition, Rc<Stmt> body".to_string(),
     ])?;
 
     Ok(())
