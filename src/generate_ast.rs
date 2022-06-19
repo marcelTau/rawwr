@@ -81,14 +81,14 @@ pub fn generate_ast(
     writeln!(file, "impl {} {{", base_name)?;
     writeln!(
         file,
-        "    pub fn accept<T>(&self, wrapper: &Rc<{0}>, visitor: &dyn {0}Visitor<T>) -> Result<T, LoxResult> {{",
+        "    pub fn accept<T>(&self, wrapper: Rc<{0}>, visitor: &dyn {0}Visitor<T>) -> Result<T, LoxResult> {{",
         base_name
     )?;
     writeln!(file, "        match self {{")?;
     for t in &ttypes {
         writeln!(
             file,
-            "            {}::{}(x) => visitor.visit_{}_{}(wrapper, &x),",
+            "            {}::{}(x) => visitor.visit_{}_{}(wrapper, x),",
             base_name, t.base_name, t.base_name.to_lowercase(), base_name.to_lowercase()
         )?;
     }
@@ -110,7 +110,7 @@ pub fn generate_ast(
     for t in &ttypes {
         writeln!(
             file,
-            "    fn visit_{0}_{1}(&self, wrapper: &Rc<{3}>, {1}: &{2}{3}) -> Result<T, LoxResult>;",
+            "    fn visit_{0}_{1}(&self, wrapper: Rc<{3}>, {1}: &{2}{3}) -> Result<T, LoxResult>;",
             t.base_name.to_lowercase(),
             base_name.to_lowercase(),
             t.base_name,

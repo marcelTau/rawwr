@@ -68,16 +68,16 @@ impl Hash for Expr {
     }
 }
 impl Expr {
-    pub fn accept<T>(&self, wrapper: &Rc<Expr>, visitor: &dyn ExprVisitor<T>) -> Result<T, LoxResult> {
+    pub fn accept<T>(&self, wrapper: Rc<Expr>, visitor: &dyn ExprVisitor<T>) -> Result<T, LoxResult> {
         match self {
-            Expr::Assign(x) => visitor.visit_assign_expr(wrapper, &x),
-            Expr::Binary(x) => visitor.visit_binary_expr(wrapper, &x),
-            Expr::Call(x) => visitor.visit_call_expr(wrapper, &x),
-            Expr::Grouping(x) => visitor.visit_grouping_expr(wrapper, &x),
-            Expr::Literal(x) => visitor.visit_literal_expr(wrapper, &x),
-            Expr::Logical(x) => visitor.visit_logical_expr(wrapper, &x),
-            Expr::Unary(x) => visitor.visit_unary_expr(wrapper, &x),
-            Expr::Variable(x) => visitor.visit_variable_expr(wrapper, &x),
+            Expr::Assign(x) => visitor.visit_assign_expr(wrapper, x),
+            Expr::Binary(x) => visitor.visit_binary_expr(wrapper, x),
+            Expr::Call(x) => visitor.visit_call_expr(wrapper, x),
+            Expr::Grouping(x) => visitor.visit_grouping_expr(wrapper, x),
+            Expr::Literal(x) => visitor.visit_literal_expr(wrapper, x),
+            Expr::Logical(x) => visitor.visit_logical_expr(wrapper, x),
+            Expr::Unary(x) => visitor.visit_unary_expr(wrapper, x),
+            Expr::Variable(x) => visitor.visit_variable_expr(wrapper, x),
         }
     }
 }
@@ -122,13 +122,13 @@ pub struct VariableExpr {
 }
 
 pub trait ExprVisitor<T> {
-    fn visit_assign_expr(&self, wrapper: &Rc<Expr>, expr: &AssignExpr) -> Result<T, LoxResult>;
-    fn visit_binary_expr(&self, wrapper: &Rc<Expr>, expr: &BinaryExpr) -> Result<T, LoxResult>;
-    fn visit_call_expr(&self, wrapper: &Rc<Expr>, expr: &CallExpr) -> Result<T, LoxResult>;
-    fn visit_grouping_expr(&self, wrapper: &Rc<Expr>, expr: &GroupingExpr) -> Result<T, LoxResult>;
-    fn visit_literal_expr(&self, wrapper: &Rc<Expr>, expr: &LiteralExpr) -> Result<T, LoxResult>;
-    fn visit_logical_expr(&self, wrapper: &Rc<Expr>, expr: &LogicalExpr) -> Result<T, LoxResult>;
-    fn visit_unary_expr(&self, wrapper: &Rc<Expr>, expr: &UnaryExpr) -> Result<T, LoxResult>;
-    fn visit_variable_expr(&self, wrapper: &Rc<Expr>, expr: &VariableExpr) -> Result<T, LoxResult>;
+    fn visit_assign_expr(&self, wrapper: Rc<Expr>, expr: &AssignExpr) -> Result<T, LoxResult>;
+    fn visit_binary_expr(&self, wrapper: Rc<Expr>, expr: &BinaryExpr) -> Result<T, LoxResult>;
+    fn visit_call_expr(&self, wrapper: Rc<Expr>, expr: &CallExpr) -> Result<T, LoxResult>;
+    fn visit_grouping_expr(&self, wrapper: Rc<Expr>, expr: &GroupingExpr) -> Result<T, LoxResult>;
+    fn visit_literal_expr(&self, wrapper: Rc<Expr>, expr: &LiteralExpr) -> Result<T, LoxResult>;
+    fn visit_logical_expr(&self, wrapper: Rc<Expr>, expr: &LogicalExpr) -> Result<T, LoxResult>;
+    fn visit_unary_expr(&self, wrapper: Rc<Expr>, expr: &UnaryExpr) -> Result<T, LoxResult>;
+    fn visit_variable_expr(&self, wrapper: Rc<Expr>, expr: &VariableExpr) -> Result<T, LoxResult>;
 }
 

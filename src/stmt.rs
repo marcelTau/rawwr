@@ -69,16 +69,16 @@ impl Hash for Stmt {
     }
 }
 impl Stmt {
-    pub fn accept<T>(&self, wrapper: &Rc<Stmt>, visitor: &dyn StmtVisitor<T>) -> Result<T, LoxResult> {
+    pub fn accept<T>(&self, wrapper: Rc<Stmt>, visitor: &dyn StmtVisitor<T>) -> Result<T, LoxResult> {
         match self {
-            Stmt::Block(x) => visitor.visit_block_stmt(wrapper, &x),
-            Stmt::Expression(x) => visitor.visit_expression_stmt(wrapper, &x),
-            Stmt::Function(x) => visitor.visit_function_stmt(wrapper, &x),
-            Stmt::If(x) => visitor.visit_if_stmt(wrapper, &x),
-            Stmt::Print(x) => visitor.visit_print_stmt(wrapper, &x),
-            Stmt::Return(x) => visitor.visit_return_stmt(wrapper, &x),
-            Stmt::Var(x) => visitor.visit_var_stmt(wrapper, &x),
-            Stmt::While(x) => visitor.visit_while_stmt(wrapper, &x),
+            Stmt::Block(x) => visitor.visit_block_stmt(wrapper, x),
+            Stmt::Expression(x) => visitor.visit_expression_stmt(wrapper, x),
+            Stmt::Function(x) => visitor.visit_function_stmt(wrapper, x),
+            Stmt::If(x) => visitor.visit_if_stmt(wrapper, x),
+            Stmt::Print(x) => visitor.visit_print_stmt(wrapper, x),
+            Stmt::Return(x) => visitor.visit_return_stmt(wrapper, x),
+            Stmt::Var(x) => visitor.visit_var_stmt(wrapper, x),
+            Stmt::While(x) => visitor.visit_while_stmt(wrapper, x),
         }
     }
 }
@@ -122,13 +122,13 @@ pub struct WhileStmt {
 }
 
 pub trait StmtVisitor<T> {
-    fn visit_block_stmt(&self, wrapper: &Rc<Stmt>, stmt: &BlockStmt) -> Result<T, LoxResult>;
-    fn visit_expression_stmt(&self, wrapper: &Rc<Stmt>, stmt: &ExpressionStmt) -> Result<T, LoxResult>;
-    fn visit_function_stmt(&self, wrapper: &Rc<Stmt>, stmt: &FunctionStmt) -> Result<T, LoxResult>;
-    fn visit_if_stmt(&self, wrapper: &Rc<Stmt>, stmt: &IfStmt) -> Result<T, LoxResult>;
-    fn visit_print_stmt(&self, wrapper: &Rc<Stmt>, stmt: &PrintStmt) -> Result<T, LoxResult>;
-    fn visit_return_stmt(&self, wrapper: &Rc<Stmt>, stmt: &ReturnStmt) -> Result<T, LoxResult>;
-    fn visit_var_stmt(&self, wrapper: &Rc<Stmt>, stmt: &VarStmt) -> Result<T, LoxResult>;
-    fn visit_while_stmt(&self, wrapper: &Rc<Stmt>, stmt: &WhileStmt) -> Result<T, LoxResult>;
+    fn visit_block_stmt(&self, wrapper: Rc<Stmt>, stmt: &BlockStmt) -> Result<T, LoxResult>;
+    fn visit_expression_stmt(&self, wrapper: Rc<Stmt>, stmt: &ExpressionStmt) -> Result<T, LoxResult>;
+    fn visit_function_stmt(&self, wrapper: Rc<Stmt>, stmt: &FunctionStmt) -> Result<T, LoxResult>;
+    fn visit_if_stmt(&self, wrapper: Rc<Stmt>, stmt: &IfStmt) -> Result<T, LoxResult>;
+    fn visit_print_stmt(&self, wrapper: Rc<Stmt>, stmt: &PrintStmt) -> Result<T, LoxResult>;
+    fn visit_return_stmt(&self, wrapper: Rc<Stmt>, stmt: &ReturnStmt) -> Result<T, LoxResult>;
+    fn visit_var_stmt(&self, wrapper: Rc<Stmt>, stmt: &VarStmt) -> Result<T, LoxResult>;
+    fn visit_while_stmt(&self, wrapper: Rc<Stmt>, stmt: &WhileStmt) -> Result<T, LoxResult>;
 }
 

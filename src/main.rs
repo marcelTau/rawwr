@@ -65,7 +65,7 @@ impl Lox {
         let mut parser = Parser::new(tokens);
         let statements = parser.parse()?;
 
-        if parser.success() && self.interpreter.interpret(&statements) {
+        if parser.success() && self.interpreter.interpret(statements) {
             Ok(())
         } else {
             Ok(())
