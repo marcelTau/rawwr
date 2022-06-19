@@ -12,6 +12,7 @@ use crate::native_functions::*;
 use crate::object::Object;
 use crate::stmt::*;
 use crate::token::*;
+use crate::class::*;
 
 pub struct Interpreter {
     environment: RefCell<Rc<RefCell<Environment>>>,
@@ -20,6 +21,15 @@ pub struct Interpreter {
 }
 
 impl StmtVisitor<()> for Interpreter {
+    fn visit_class_stmt(&self, _: Rc<Stmt>, stmt: &ClassStmt) -> Result<(), LoxResult> {
+        self.environment.borrow().borrow_mut().define(&stmt.name.lexeme, Object::Nil);
+
+        let klass = Object::Class(Class::new(stmt.name.lexeme.clone()));
+
+        self.environment.borrow().borrow_mut().assign(&stmt.name, klass)?;
+
+        Ok(())
+    }
     fn visit_expression_stmt(&self, _: Rc<Stmt>, stmt: &ExpressionStmt) -> Result<(), LoxResult> {
         self.evaluate(stmt.expression.clone())?;
         Ok(())

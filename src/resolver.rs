@@ -23,6 +23,12 @@ pub struct Resolver<'a> {
 }
 
 impl<'a> StmtVisitor<()> for Resolver<'a> {
+    fn visit_class_stmt(&self, _: Rc<Stmt>, stmt: &ClassStmt) -> Result<(), LoxResult> {
+        self.declare(&stmt.name);
+        self.define(&stmt.name);
+        Ok(())
+    }
+
     fn visit_block_stmt(&self, _: Rc<Stmt>, stmt: &BlockStmt) -> Result<(), LoxResult> {
         self.begin_scope();
         self.resolve(stmt.statements.clone())?;

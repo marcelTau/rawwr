@@ -116,7 +116,9 @@ impl Parser {
     }
 
     fn declaration(&mut self) -> Result<Rc<Stmt>, LoxResult> {
-        let result = if self.is_match(&[TokenType::Fun]) {
+        let result = if self.is_match(&[TokenType::Class]) {
+            self.class_declaration()
+        } else if self.is_match(&[TokenType::Fun]) {
             self.function("function")
         } else if self.is_match(&[TokenType::Var]) {
             self.var_declaration()
@@ -129,6 +131,24 @@ impl Parser {
         }
 
         result
+    }
+
+    fn class_declaration(&mut self) -> Result<Rc<Stmt>, LoxResult> {
+        let name = self.consume(&TokenType::Identifier, "Expect class name.".to_string())?;
+        self.consume(&TokenType::LeftBrace, "Expect '{{' before class body.".to_string())?;
+
+        let mut methods = Vec::new();
+
+        while !self.check(&TokenType::RightBrace) && !self.is_at_end() {
+            methods.push(self.function("method")?);
+        }
+
+        self.consume(&TokenType::RightBrace, "Expect '}}' after class body.".to_string());
+
+        Ok(Rc::new(Stmt::Class(Rc::new(ClassStmt {
+            name,
+            methods: Rc::new(methods),
+        }))))
     }
 
     fn statement(&mut self) -> Result<Rc<Stmt>, LoxResult> {

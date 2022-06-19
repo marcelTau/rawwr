@@ -15,6 +15,7 @@ mod callable;
 mod native_functions;
 mod function;
 mod resolver;
+mod class;
 
 use error::*;
 use interpreter::*;
