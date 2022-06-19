@@ -20,12 +20,14 @@ use error::*;
 use interpreter::*;
 use parser::*;
 use scanner::*;
+use resolver::*;
 
 use std::env;
 use std::fs;
 use std::io;
 use std::io::Write;
 use std::cmp::Ordering;
+use std::rc::Rc;
 
 struct Lox {
     interpreter: Interpreter,
@@ -65,16 +67,15 @@ impl Lox {
         let mut parser = Parser::new(tokens);
         let statements = parser.parse()?;
 
-        if parser.success() && self.interpreter.interpret(statements) {
-            Ok(())
-        } else {
-            Ok(())
-            // @todo should this still be here
-            //Err(LoxError::scanner_error(
-            //0,
-            //"something went wrong, please go ahead and fix your code",
-            //))
+
+        if parser.success() {
+            let resolver = Resolver::new(&self.interpreter);
+            let s = Rc::new(statements);
+
+            resolver.resolve(Rc::clone(&s))?;
+            self.interpreter.interpret(Rc::clone(&s));
         }
+        Ok(())
     }
 }
 

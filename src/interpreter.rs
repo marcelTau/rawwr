@@ -1,6 +1,7 @@
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
+use std::ops::Deref;
 
 use crate::callable::*;
 use crate::environment::*;
@@ -142,12 +143,20 @@ impl ExprVisitor<Object> for Interpreter {
         self.lookup_variable(&expr.name, wrapper)
     }
 
-    fn visit_assign_expr(&self, _: Rc<Expr>, expr: &AssignExpr) -> Result<Object, LoxResult> {
+    fn visit_assign_expr(&self, wrapper: Rc<Expr>, expr: &AssignExpr) -> Result<Object, LoxResult> {
         let value = self.evaluate(expr.value.clone())?;
-        self.environment
-            .borrow()
-            .borrow_mut()
-            .assign(&expr.name, value.clone())?;
+
+        if let Some(distance) = self.locals.borrow().get(&wrapper) {
+            self.environment
+                .borrow()
+                .borrow_mut()
+                .assign_at(*distance, &expr.name, &value)?;
+        } else {
+            self.globals
+                .borrow_mut()
+                .assign(&expr.name, value.clone())?;
+        }
+
         Ok(value)
     }
 
@@ -221,9 +230,9 @@ impl Interpreter {
         }
     }
 
-    pub fn interpret(&self, statements: Vec<Rc<Stmt>>) -> bool {
-        for statement in statements {
-            if let Err(e) = self.execute(statement) {
+    pub fn interpret(&self, statements: Rc<Vec<Rc<Stmt>>>) -> bool {
+        for statement in statements.deref() {
+            if let Err(e) = self.execute(statement.clone()) {
                 return false;
             }
         }

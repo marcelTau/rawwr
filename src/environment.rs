@@ -37,10 +37,10 @@ impl Environment {
         if distance == 0 {
             self.values.get(name).unwrap().clone()
         } else {
-            //self.enclosing.as_ref().unwrap().borrow().get_at(distance - 1, name) // or just call it on self and not on self.enclosing
-            self.get_at(distance - 1, name)
+            self.enclosing.as_ref().unwrap().borrow().get_at(distance - 1, name)
         }
     }
+
 
     pub fn get(&self, name: &Token) -> Result<Object, LoxResult> {
         if let Some(object) = self.values.get(&name.lexeme) {
@@ -50,6 +50,15 @@ impl Environment {
         } else {
             let err_msg = format!("GET: Undefined variable '{}'.", &name.lexeme);
             Err(LoxResult::runtime_error(name, &err_msg))
+        }
+    }
+
+    pub fn assign_at(&mut self, distance: usize, name: &Token, value: &Object) -> Result<(), LoxResult> {
+        if distance == 0 {
+            self.values.insert(name.lexeme.clone(), value.clone());
+            Ok(())
+        } else {
+            self.enclosing.as_ref().unwrap().borrow_mut().assign_at(distance - 1, name, value)
         }
     }
 

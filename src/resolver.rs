@@ -9,12 +9,12 @@ use crate::interpreter::*;
 use crate::stmt::*;
 use crate::token::*;
 
-pub struct Resolver {
-    interpreter: Interpreter,
+pub struct Resolver<'a> {
+    interpreter: &'a Interpreter,
     scopes: RefCell<Vec<HashMap<String, bool>>>,
 }
 
-impl StmtVisitor<()> for Resolver {
+impl<'a> StmtVisitor<()> for Resolver<'a> {
     fn visit_block_stmt(&self, _: Rc<Stmt>, stmt: &BlockStmt) -> Result<(), LoxResult> {
         self.begin_scope();
         self.resolve(stmt.statements.clone())?;
@@ -69,15 +69,15 @@ impl StmtVisitor<()> for Resolver {
     }
 }
 
-impl Resolver {
-    fn new(interpreter: Interpreter) -> Self {
+impl<'a> Resolver<'a> {
+    pub fn new(interpreter: &'a Interpreter) -> Self {
         Resolver {
             interpreter,
             scopes: RefCell::new(Vec::new()),
         }
     }
 
-    fn resolve(&self, statements: Rc<Vec<Rc<Stmt>>>) -> Result<(), LoxResult> {
+    pub fn resolve(&self, statements: Rc<Vec<Rc<Stmt>>>) -> Result<(), LoxResult> {
         for statement in statements.deref() {
             self.resolve_stmt(statement.clone())?;
         }
@@ -126,9 +126,21 @@ impl Resolver {
     }
 
     fn resolve_local(&self, expr: Rc<Expr>, name: &Token) {
+
+        //let mut i: i32 = self.scopes.borrow().len() as i32 - 1;
+
+        //while i >= 0 {
+            //if self.scopes.borrow()[i as usize].contains_key(&name.lexeme) {
+                //self.interpreter.resolve(expr, i as usize);
+                //return;
+            //}
+            //i -= 1;
+        //}
+
+
         for (scope, map) in self.scopes.borrow().iter().rev().enumerate() {
             if map.contains_key(&name.lexeme) {
-                self.interpreter.resolve(expr, scope); // @todo no clone here probably
+                self.interpreter.resolve(expr, scope);
                 return;
             }
         }
@@ -146,7 +158,7 @@ impl Resolver {
     }
 }
 
-impl ExprVisitor<()> for Resolver {
+impl<'a> ExprVisitor<()> for Resolver<'a> {
     fn visit_literal_expr(&self, _: Rc<Expr>, expr: &LiteralExpr) -> Result<(), LoxResult> {
         Ok(())
     }
@@ -170,9 +182,8 @@ impl ExprVisitor<()> for Resolver {
                 .borrow()
                 .last()
                 .unwrap()
-                .get(&expr.name.lexeme)
-                .unwrap()
-                == &false
+                .get(&expr.name.lexeme.clone())
+                == Some(&false)
         {
             Err(LoxResult::runtime_error(&expr.name, "Can't read local variable in it's own initializer"))
         } else {
