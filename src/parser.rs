@@ -6,6 +6,12 @@ use crate::token::*;
 
 use std::rc::Rc;
 
+macro_rules! match_token {
+    ($self:ident, $($args:ident),+) => {
+        $self.is_match(&[$(TokenType::$args),*])
+    }
+}
+
 pub struct Parser {
     tokens: Vec<Token>,
     current: usize,
@@ -116,11 +122,11 @@ impl Parser {
     }
 
     fn declaration(&mut self) -> Result<Rc<Stmt>, LoxResult> {
-        let result = if self.is_match(&[TokenType::Class]) {
+        let result = if match_token!(self, Class) {
             self.class_declaration()
-        } else if self.is_match(&[TokenType::Fun]) {
+        } else if match_token!(self, Fun) {
             self.function("function")
-        } else if self.is_match(&[TokenType::Var]) {
+        } else if match_token!(self, Var) {
             self.var_declaration()
         } else {
             self.statement()
@@ -152,27 +158,26 @@ impl Parser {
     }
 
     fn statement(&mut self) -> Result<Rc<Stmt>, LoxResult> {
-        if self.is_match(&[TokenType::For]) {
+        if match_token!(self, For) {
             return self.for_statement();
         }
-
-        if self.is_match(&[TokenType::If]) {
+        if match_token!(self, If) {
             return Ok(Rc::new(self.if_statement()?));
         }
 
-        if self.is_match(&[TokenType::Print]) {
+        if match_token!(self, Print) {
             return Ok(Rc::new(self.print_statement()?));
         }
 
-        if self.is_match(&[TokenType::Return]) {
+        if match_token!(self, Return) {
             return Ok(Rc::new(self.return_statement()?));
         }
 
-        if self.is_match(&[TokenType::While]) {
+        if match_token!(self, While) {
             return Ok(Rc::new(self.while_statement()?));
         }
 
-        if self.is_match(&[TokenType::LeftBrace]) {
+        if match_token!(self, LeftBrace) {
             return Ok(Rc::new(Stmt::Block(Rc::new(BlockStmt {
                 statements: Rc::new(self.block()?),
             }))));
@@ -183,9 +188,9 @@ impl Parser {
     fn for_statement(&mut self) -> Result<Rc<Stmt>, LoxResult> {
         self.consume(&TokenType::LeftParen, "Expect '(' after 'for'.")?;
 
-        let initializer = if self.is_match(&[TokenType::Semicolon]) {
+        let initializer = if match_token!(self, Semicolon) {
             None
-        } else if self.is_match(&[TokenType::Var]) {
+        } else if match_token!(self, Var) {
             Some(self.var_declaration()?)
         } else {
             Some(self.expression_statement()?)
@@ -242,7 +247,7 @@ impl Parser {
         self.consume(&TokenType::RightParen, "Expect ')' after if condition.")?;
 
         let then_branch = self.statement()?;
-        let else_branch = if self.is_match(&[TokenType::Else]) {
+        let else_branch = if match_token!(self, Else) {
             Some(self.statement()?)
         } else {
             None
@@ -279,7 +284,7 @@ impl Parser {
     fn var_declaration(&mut self) -> Result<Rc<Stmt>, LoxResult> {
         let name = self.consume(&TokenType::Identifier, "Expect variable name.")?;
 
-        let initializer = if self.is_match(&[TokenType::Equal]) {
+        let initializer = if match_token!(self, Equal) {
             Some(Rc::new(self.expression()?))
         } else {
             None
@@ -324,7 +329,7 @@ impl Parser {
 
         if !self.check(&TokenType::RightParen) {
             params.push(self.consume(&TokenType::Identifier, "Expect parameter name.")?);
-            while self.is_match(&[TokenType::Comma]) {
+            while match_token!(self, Comma) {
                 if params.len() >= 255 {
                     self.error(&self.peek(), "You can't have more than 255 parameters.");
                 }
@@ -358,7 +363,7 @@ impl Parser {
     fn assignment(&mut self) -> Result<Expr, LoxResult> {
         let expr = self.or()?;
 
-        if self.is_match(&[TokenType::Equal]) {
+        if match_token!(self, Equal) {
             let equals = self.previous();
             let value = self.assignment()?;
 
@@ -383,7 +388,7 @@ impl Parser {
     fn or(&mut self) -> Result<Expr, LoxResult> {
         let mut expr = self.and()?;
 
-        while self.is_match(&[TokenType::Or]) {
+        while match_token!(self, Or) {
             let operator = self.previous();
             let right = self.and()?;
             expr = Expr::Logical(Rc::new(LogicalExpr {
@@ -399,7 +404,7 @@ impl Parser {
     fn and(&mut self) -> Result<Expr, LoxResult> {
         let mut expr = self.equality()?;
 
-        while self.is_match(&[TokenType::And]) {
+        while match_token!(self, And) {
             let operator = self.previous();
             let right = self.equality()?;
             expr = Expr::Logical(Rc::new(LogicalExpr {
@@ -415,7 +420,7 @@ impl Parser {
     fn equality(&mut self) -> Result<Expr, LoxResult> {
         let mut expr = self.comparison()?;
 
-        while self.is_match(&[TokenType::BangEqual, TokenType::EqualEqual]) {
+        while match_token!(self, BangEqual, EqualEqual) {
             let operator = self.previous();
             let right = self.comparison()?;
             expr = Expr::Binary(Rc::new(BinaryExpr {
@@ -431,12 +436,7 @@ impl Parser {
     fn comparison(&mut self) -> Result<Expr, LoxResult> {
         let mut expr = self.term()?;
 
-        while self.is_match(&[
-            TokenType::Greater,
-            TokenType::GreaterEqual,
-            TokenType::Less,
-            TokenType::LessEqual,
-        ]) {
+        while match_token!(self, Greater, GreaterEqual, Less, LessEqual) {
             let operator = self.previous();
             let right = self.term()?;
             expr = Expr::Binary(Rc::new(BinaryExpr {
@@ -452,7 +452,7 @@ impl Parser {
     fn term(&mut self) -> Result<Expr, LoxResult> {
         let mut expr = self.factor()?;
 
-        while self.is_match(&[TokenType::Minus, TokenType::Plus]) {
+        while match_token!(self, Minus, Plus) {
             let operator = self.previous();
             let right = self.factor()?;
             expr = Expr::Binary(Rc::new(BinaryExpr {
@@ -467,7 +467,7 @@ impl Parser {
     fn factor(&mut self) -> Result<Expr, LoxResult> {
         let mut expr = self.unary()?;
 
-        while self.is_match(&[TokenType::Star, TokenType::Slash]) {
+        while match_token!(self, Star, Slash) {
             let operator = self.previous();
             let right = self.unary()?;
             expr = Expr::Binary(Rc::new(BinaryExpr {
@@ -481,7 +481,7 @@ impl Parser {
     }
 
     fn unary(&mut self) -> Result<Expr, LoxResult> {
-        if self.is_match(&[TokenType::Bang, TokenType::Minus]) {
+        if match_token!(self, Bang, Minus) {
             let operator = self.previous();
             let right = self.unary()?;
             Ok(Expr::Unary(Rc::new(UnaryExpr {
@@ -497,9 +497,9 @@ impl Parser {
         let mut expr = self.primary()?;
 
         loop {
-            if self.is_match(&[TokenType::LeftParen]) {
+            if match_token!(self, LeftParen) {
                 expr = self.finish_call(&Rc::new(expr))?;
-            } else if self.is_match(&[TokenType::Dot]) {
+            } else if match_token!(self, Dot) {
                 let name =
                     self.consume(&TokenType::Identifier, "Expect property name after '.'.")?;
                 expr = Expr::Get(Rc::new(GetExpr {
@@ -519,7 +519,7 @@ impl Parser {
 
         if !self.check(&TokenType::RightParen) {
             arguments.push(Rc::new(self.expression()?));
-            while self.is_match(&[TokenType::Comma]) {
+            while match_token!(self, Comma) {
                 if arguments.len() >= 255 {
                     self.error(&self.peek(), "You can't have more than 255 arguments.");
                 }
@@ -537,34 +537,34 @@ impl Parser {
     }
 
     fn primary(&mut self) -> Result<Expr, LoxResult> {
-        if self.is_match(&[TokenType::False]) {
+        if match_token!(self, False) {
             return Ok(Expr::Literal(Rc::new(LiteralExpr {
                 value: Some(Object::Bool(false)),
             })));
         }
-        if self.is_match(&[TokenType::True]) {
+        if match_token!(self, True) {
             return Ok(Expr::Literal(Rc::new(LiteralExpr {
                 value: Some(Object::Bool(true)),
             })));
         }
-        if self.is_match(&[TokenType::Nil]) {
+        if match_token!(self, Nil) {
             return Ok(Expr::Literal(Rc::new(LiteralExpr {
                 value: Some(Object::Nil),
             })));
         }
-        if self.is_match(&[TokenType::StringLiteral, TokenType::NumberLiteral]) {
+        if match_token!(self, StringLiteral, NumberLiteral) {
             return Ok(Expr::Literal(Rc::new(LiteralExpr {
                 value: self.previous().literal,
             })));
         }
 
-        if self.is_match(&[TokenType::Identifier]) {
+        if match_token!(self, Identifier) {
             return Ok(Expr::Variable(Rc::new(VariableExpr {
                 name: self.previous(),
             })));
         }
 
-        if self.is_match(&[TokenType::LeftParen]) {
+        if match_token!(self, LeftParen) {
             let expr = self.expression()?;
             self.consume(&TokenType::RightParen, "Expect ')' after expression.")?;
             return Ok(Expr::Grouping(Rc::new(GroupingExpr {
