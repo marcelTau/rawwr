@@ -22,12 +22,21 @@ impl StmtVisitor<()> for Resolver {
         Ok(())
     }
     fn visit_expression_stmt(&self, _: &Rc<Stmt>, stmt: &ExpressionStmt) -> Result<(), LoxResult> {
-        Ok(())
+        self.resolve_expr(&stmt.expression)
     }
     fn visit_function_stmt(&self, _: &Rc<Stmt>, stmt: &FunctionStmt) -> Result<(), LoxResult> {
+        self.declare(&stmt.name);
+        self.define(&stmt.name);
+        self.resolve_function(stmt)?;
         Ok(())
     }
     fn visit_if_stmt(&self, _: &Rc<Stmt>, stmt: &IfStmt) -> Result<(), LoxResult> {
+        self.resolve_expr(&stmt.condition)?;
+        self.resolve_stmt(&stmt.then_branch)?;
+
+        if let Some(else_branch) = &stmt.else_branch {
+            self.resolve_stmt(&else_branch)?;
+        }
         Ok(())
     }
     fn visit_print_stmt(&self, _: &Rc<Stmt>, stmt: &PrintStmt) -> Result<(), LoxResult> {
@@ -61,6 +70,7 @@ impl Resolver {
             scopes: RefCell::new(Vec::new()),
         }
     }
+
     fn resolve(&self, statements: &Rc<Vec<Rc<Stmt>>>) -> Result<(), LoxResult> {
         for statement in statements.deref() {
             self.resolve_stmt(&statement)?;
@@ -112,10 +122,21 @@ impl Resolver {
     fn resolve_local(&self, expr: &Rc<Expr>, name: &Token) {
         for (scope, map) in self.scopes.borrow().iter().rev().enumerate() {
             if map.contains_key(&name.lexeme) {
-                self.interpreter.resolve(expr.clone(), scope); // @todo no clone here probably
+                self.interpreter.resolve(expr, scope); // @todo no clone here probably
                 return;
             }
         }
+    }
+
+    fn resolve_function(&self, function: &FunctionStmt) -> Result<(), LoxResult> {
+        self.begin_scope();
+        for param in function.params.deref() {
+            self.declare(param);
+            self.define(param);
+        }
+        self.resolve(&function.body)?;
+        self.end_scope();
+        Ok(())
     }
 }
 
@@ -150,7 +171,9 @@ impl ExprVisitor<()> for Resolver {
         }
 
     }
-    fn visit_assign_expr(&self, _: &Rc<Expr>, expr: &AssignExpr) -> Result<(), LoxResult> {
+    fn visit_assign_expr(&self, wrapper: &Rc<Expr>, expr: &AssignExpr) -> Result<(), LoxResult> {
+        self.resolve_expr(&expr.value)?;
+        self.resolve_local(wrapper, &expr.name);
         Ok(())
     }
     fn visit_logical_expr(&self, _: &Rc<Expr>, expr: &LogicalExpr) -> Result<(), LoxResult> {
