@@ -145,6 +145,7 @@ fn main() -> Result<(), std::io::Error> {
         "Assign   : Token name, Rc<Expr> value".to_string(),
         "Binary   : Rc<Expr> left, Token operator, Rc<Expr> right".to_string(),
         "Call     : Rc<Expr> callee, Token paren, Vec<Rc<Expr>> arguments".to_string(),
+        "Get      : Rc<Expr> object, Token name".to_string(),
         "Grouping : Rc<Expr> expression".to_string(),
         "Literal  : Option<Object> value".to_string(),
         "Logical  : Rc<Expr> left, Token operator, Rc<Expr> right".to_string(),

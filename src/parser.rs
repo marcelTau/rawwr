@@ -135,7 +135,10 @@ impl Parser {
 
     fn class_declaration(&mut self) -> Result<Rc<Stmt>, LoxResult> {
         let name = self.consume(&TokenType::Identifier, "Expect class name.".to_string())?;
-        self.consume(&TokenType::LeftBrace, "Expect '{{' before class body.".to_string())?;
+        self.consume(
+            &TokenType::LeftBrace,
+            "Expect '{{' before class body.".to_string(),
+        )?;
 
         let mut methods = Vec::new();
 
@@ -143,7 +146,10 @@ impl Parser {
             methods.push(self.function("method")?);
         }
 
-        self.consume(&TokenType::RightBrace, "Expect '}}' after class body.".to_string());
+        self.consume(
+            &TokenType::RightBrace,
+            "Expect '}}' after class body.".to_string(),
+        )?;
 
         Ok(Rc::new(Stmt::Class(Rc::new(ClassStmt {
             name,
@@ -230,7 +236,7 @@ impl Parser {
 
         body = Rc::new(Stmt::While(Rc::new(WhileStmt {
             condition: Rc::new(condition),
-            body
+            body,
         })));
 
         if let Some(init) = initializer {
@@ -320,7 +326,7 @@ impl Parser {
 
         Ok(Stmt::While(Rc::new(WhileStmt {
             condition: Rc::new(condition),
-            body
+            body,
         })))
     }
 
@@ -330,7 +336,9 @@ impl Parser {
             &TokenType::Semicolon,
             "Expect ';' after expression.".to_string(),
         )?;
-        Ok(Rc::new(Stmt::Expression(Rc::new(ExpressionStmt { expression: Rc::new(expr) }))))
+        Ok(Rc::new(Stmt::Expression(Rc::new(ExpressionStmt {
+            expression: Rc::new(expr),
+        }))))
     }
 
     fn function(&mut self, kind: &str) -> Result<Rc<Stmt>, LoxResult> {
@@ -522,6 +530,15 @@ impl Parser {
         loop {
             if self.is_match(&[TokenType::LeftParen]) {
                 expr = self.finish_call(&Rc::new(expr))?;
+            } else if self.is_match(&[TokenType::Dot]) {
+                let name = self.consume(
+                    &TokenType::Identifier,
+                    "Expect property name after '.'.".to_string(),
+                )?;
+                expr = Expr::Get(Rc::new(GetExpr {
+                    object: Rc::new(expr),
+                    name,
+                }))
             } else {
                 break;
             }

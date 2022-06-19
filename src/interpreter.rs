@@ -30,10 +30,12 @@ impl StmtVisitor<()> for Interpreter {
 
         Ok(())
     }
+
     fn visit_expression_stmt(&self, _: Rc<Stmt>, stmt: &ExpressionStmt) -> Result<(), LoxResult> {
         self.evaluate(stmt.expression.clone())?;
         Ok(())
     }
+
     fn visit_print_stmt(&self, _: Rc<Stmt>, stmt: &PrintStmt) -> Result<(), LoxResult> {
         let value = self.evaluate(stmt.expression.clone())?;
         println!("{}", value);
@@ -68,6 +70,7 @@ impl StmtVisitor<()> for Interpreter {
             Ok(())
         }
     }
+
     fn visit_while_stmt(&self, _: Rc<Stmt>, stmt: &WhileStmt) -> Result<(), LoxResult> {
         while self.is_truthy(&self.evaluate(stmt.condition.clone())?) {
             self.execute(stmt.body.clone())?;
@@ -96,6 +99,15 @@ impl StmtVisitor<()> for Interpreter {
 }
 
 impl ExprVisitor<Object> for Interpreter {
+    fn visit_get_expr(&self, _: Rc<Expr>, expr: &GetExpr) -> Result<Object, LoxResult> {
+        let object = self.evaluate(expr.object.clone())?;
+        if let Object::Instance(o) = object {
+            o.get(&expr.name)
+        } else {
+            Err(LoxResult::runtime_error(&expr.name, "Only instances have properties."))
+        }
+    }
+
     fn visit_literal_expr(&self, _: Rc<Expr>, expr: &LiteralExpr) -> Result<Object, LoxResult> {
         Ok(expr.value.clone().unwrap())
     }
@@ -215,8 +227,7 @@ impl ExprVisitor<Object> for Interpreter {
                 ));
             }
             class.instantiate(self, arguments, Rc::clone(&class))
-            // class.call(self, arguments)
-        }else {
+        } else {
             Err(LoxResult::runtime_error(
                 &expr.paren,
                 "Can only call functions and classes",

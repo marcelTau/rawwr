@@ -9,6 +9,7 @@ pub enum Expr {
     Assign(Rc<AssignExpr>),
     Binary(Rc<BinaryExpr>),
     Call(Rc<CallExpr>),
+    Get(Rc<GetExpr>),
     Grouping(Rc<GroupingExpr>),
     Literal(Rc<LiteralExpr>),
     Logical(Rc<LogicalExpr>),
@@ -22,6 +23,7 @@ impl PartialEq for Expr {
                   (Expr::Assign(a), Expr::Assign(b)) => Rc::ptr_eq(a, b),
                   (Expr::Binary(a), Expr::Binary(b)) => Rc::ptr_eq(a, b),
                   (Expr::Call(a), Expr::Call(b)) => Rc::ptr_eq(a, b),
+                  (Expr::Get(a), Expr::Get(b)) => Rc::ptr_eq(a, b),
                   (Expr::Grouping(a), Expr::Grouping(b)) => Rc::ptr_eq(a, b),
                   (Expr::Literal(a), Expr::Literal(b)) => Rc::ptr_eq(a, b),
                   (Expr::Logical(a), Expr::Logical(b)) => Rc::ptr_eq(a, b),
@@ -49,6 +51,9 @@ impl Hash for Expr {
         Expr::Call(a) => {
             hasher.write_usize(Rc::as_ptr(a) as usize);
         },
+        Expr::Get(a) => {
+            hasher.write_usize(Rc::as_ptr(a) as usize);
+        },
         Expr::Grouping(a) => {
             hasher.write_usize(Rc::as_ptr(a) as usize);
         },
@@ -73,6 +78,7 @@ impl Expr {
             Expr::Assign(x) => visitor.visit_assign_expr(wrapper, x),
             Expr::Binary(x) => visitor.visit_binary_expr(wrapper, x),
             Expr::Call(x) => visitor.visit_call_expr(wrapper, x),
+            Expr::Get(x) => visitor.visit_get_expr(wrapper, x),
             Expr::Grouping(x) => visitor.visit_grouping_expr(wrapper, x),
             Expr::Literal(x) => visitor.visit_literal_expr(wrapper, x),
             Expr::Logical(x) => visitor.visit_logical_expr(wrapper, x),
@@ -96,6 +102,11 @@ pub struct CallExpr {
     pub callee: Rc<Expr>,
     pub paren: Token,
     pub arguments: Vec<Rc<Expr>>,
+}
+
+pub struct GetExpr {
+    pub object: Rc<Expr>,
+    pub name: Token,
 }
 
 pub struct GroupingExpr {
@@ -125,6 +136,7 @@ pub trait ExprVisitor<T> {
     fn visit_assign_expr(&self, wrapper: Rc<Expr>, expr: &AssignExpr) -> Result<T, LoxResult>;
     fn visit_binary_expr(&self, wrapper: Rc<Expr>, expr: &BinaryExpr) -> Result<T, LoxResult>;
     fn visit_call_expr(&self, wrapper: Rc<Expr>, expr: &CallExpr) -> Result<T, LoxResult>;
+    fn visit_get_expr(&self, wrapper: Rc<Expr>, expr: &GetExpr) -> Result<T, LoxResult>;
     fn visit_grouping_expr(&self, wrapper: Rc<Expr>, expr: &GroupingExpr) -> Result<T, LoxResult>;
     fn visit_literal_expr(&self, wrapper: Rc<Expr>, expr: &LiteralExpr) -> Result<T, LoxResult>;
     fn visit_logical_expr(&self, wrapper: Rc<Expr>, expr: &LogicalExpr) -> Result<T, LoxResult>;

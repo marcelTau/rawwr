@@ -35,15 +35,18 @@ impl<'a> StmtVisitor<()> for Resolver<'a> {
         self.end_scope();
         Ok(())
     }
+
     fn visit_expression_stmt(&self, _: Rc<Stmt>, stmt: &ExpressionStmt) -> Result<(), LoxResult> {
         self.resolve_expr(stmt.expression.clone())
     }
+
     fn visit_function_stmt(&self, _: Rc<Stmt>, stmt: &FunctionStmt) -> Result<(), LoxResult> {
         self.declare(&stmt.name);
         self.define(&stmt.name);
         self.resolve_function(stmt, FunctionType::Function)?;
         Ok(())
     }
+
     fn visit_if_stmt(&self, _: Rc<Stmt>, stmt: &IfStmt) -> Result<(), LoxResult> {
         self.resolve_expr(stmt.condition.clone())?;
         self.resolve_stmt(stmt.then_branch.clone())?;
@@ -53,10 +56,12 @@ impl<'a> StmtVisitor<()> for Resolver<'a> {
         }
         Ok(())
     }
+
     fn visit_print_stmt(&self, _: Rc<Stmt>, stmt: &PrintStmt) -> Result<(), LoxResult> {
         self.resolve_expr(stmt.expression.clone())?;
         Ok(())
     }
+
     fn visit_return_stmt(&self, _: Rc<Stmt>, stmt: &ReturnStmt) -> Result<(), LoxResult> {
         if *self.current_function.borrow() == FunctionType::None {
             self.error(&stmt.keyword, "Can't return from top level code.");
@@ -172,6 +177,11 @@ impl<'a> Resolver<'a> {
 }
 
 impl<'a> ExprVisitor<()> for Resolver<'a> {
+    fn visit_get_expr(&self, _: Rc<Expr>, expr: &GetExpr) -> Result<(), LoxResult> {
+        self.resolve_expr(expr.object.clone())?;
+        Ok(())
+    }
+
     fn visit_literal_expr(&self, _: Rc<Expr>, expr: &LiteralExpr) -> Result<(), LoxResult> {
         Ok(())
     }
