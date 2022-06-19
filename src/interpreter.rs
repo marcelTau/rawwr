@@ -203,7 +203,19 @@ impl ExprVisitor<Object> for Interpreter {
                 ));
             }
             function.func.call(self, arguments)
-        } else {
+        } else if let Object::Class(class) = callee {
+            if arguments.len() != class.arity() {
+                return Err(LoxResult::runtime_error(
+                    &expr.paren,
+                    &format!(
+                        "Expected {} arguments but got {}.",
+                        class.arity(),
+                        arguments.len()
+                    ),
+                ));
+            }
+            class.call(self, arguments)
+        }else {
             Err(LoxResult::runtime_error(
                 &expr.paren,
                 "Can only call functions and classes",

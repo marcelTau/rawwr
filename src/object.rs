@@ -21,7 +21,7 @@ impl fmt::Display for Object {
             Object::Str(x) => write!(f, "{x}"),
             Object::Bool(x) => write!(f, "{}", x),
             Object::Func(_) => write!(f, "<func>"),
-            Object::Class(c) => write!(f, "<Class {}>", c.to_string()),
+            Object::Class(c) => write!(f, "<Class {}>", c),
             Object::Nil => write!(f, "nil"),
             Object::ArithmeticError => write!(f, "ArithmeticError"),
             Object::DivByZeroError => write!(f, "DivByZeroError"),
