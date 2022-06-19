@@ -1,5 +1,6 @@
 use crate::object::*;
 use core::fmt;
+#[allow(clippy::upper_case_acronyms)]
 
 #[derive(Debug, PartialEq, Eq, Copy, Clone)]
 pub enum TokenType {

@@ -167,10 +167,8 @@ impl ExprVisitor<Object> for Interpreter {
             if self.is_truthy(&left) {
                 return Ok(left);
             }
-        } else {
-            if !self.is_truthy(&left) {
+        } else if !self.is_truthy(&left) {
                 return Ok(left);
-            }
         }
         self.evaluate(expr.right.clone())
     }

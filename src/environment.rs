@@ -6,7 +6,6 @@ use std::cell::RefCell;
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 use std::rc::Rc;
-use std::ops::Deref;
 
 #[derive(Debug)]
 pub struct Environment {

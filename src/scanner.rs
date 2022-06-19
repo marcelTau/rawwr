@@ -146,11 +146,10 @@ impl Scanner {
         }
 
         let text = &self.source_code[self.start..self.current];
-        let token_type = self
+        let token_type = *self
             .keywords
             .get(text)
-            .unwrap_or(&TokenType::Identifier)
-            .clone();
+            .unwrap_or(&TokenType::Identifier);
 
         match token_type {
             TokenType::True => self.add_token(TokenType::True, Some(Object::Bool(true))),

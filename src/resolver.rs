@@ -12,6 +12,7 @@ use crate::token::*;
 pub struct Resolver<'a> {
     interpreter: &'a Interpreter,
     scopes: RefCell<Vec<HashMap<String, bool>>>,
+    had_error: RefCell<bool>,
 }
 
 impl<'a> StmtVisitor<()> for Resolver<'a> {
@@ -74,7 +75,13 @@ impl<'a> Resolver<'a> {
         Resolver {
             interpreter,
             scopes: RefCell::new(Vec::new()),
+            had_error: RefCell::new(false),
         }
+    }
+
+    fn error(&self, token: &Token, message: &str) {
+        self.had_error.replace(true);
+        LoxResult::runtime_error(token, message);
     }
 
     pub fn resolve(&self, statements: Rc<Vec<Rc<Stmt>>>) -> Result<(), LoxResult> {
@@ -100,22 +107,17 @@ impl<'a> Resolver<'a> {
     }
 
     fn declare(&self, name: &Token) {
-        if !self.scopes.borrow().is_empty() {
-            self.scopes
-                .borrow_mut()
-                .last_mut()
-                .unwrap()
-                .insert(name.lexeme.clone(), false);
+        if let Some(scope) = self.scopes.borrow_mut().last_mut() {
+            if scope.contains_key(&name.lexeme.clone()) {
+                self.error(name, "Already a variable with this name in this scope.");
+            }
+            scope.insert(name.lexeme.clone(), false);
         }
     }
 
     fn define(&self, name: &Token) {
-        if !self.scopes.borrow().is_empty() {
-            self.scopes
-                .borrow_mut()
-                .last_mut()
-                .unwrap()
-                .insert(name.lexeme.clone(), true);
+        if let Some(scope) = self.scopes.borrow_mut().last_mut() {
+            scope.insert(name.lexeme.clone(), true);
         }
     }
 
@@ -126,18 +128,6 @@ impl<'a> Resolver<'a> {
     }
 
     fn resolve_local(&self, expr: Rc<Expr>, name: &Token) {
-
-        //let mut i: i32 = self.scopes.borrow().len() as i32 - 1;
-
-        //while i >= 0 {
-            //if self.scopes.borrow()[i as usize].contains_key(&name.lexeme) {
-                //self.interpreter.resolve(expr, i as usize);
-                //return;
-            //}
-            //i -= 1;
-        //}
-
-
         for (scope, map) in self.scopes.borrow().iter().rev().enumerate() {
             if map.contains_key(&name.lexeme) {
                 self.interpreter.resolve(expr, scope);
@@ -211,43 +201,3 @@ impl<'a> ExprVisitor<()> for Resolver<'a> {
         Ok(())
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
