@@ -1,0 +1,14 @@
+fun bad() {
+    var a = "first";
+    var a = "second";
+    print a;
+}
+
+fun good() {
+    var a = "first";
+    a = "second";
+    print a;
+}
+
+bad();
+good();

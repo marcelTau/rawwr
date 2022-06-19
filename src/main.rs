@@ -73,7 +73,10 @@ impl Lox {
             let s = Rc::new(statements);
 
             resolver.resolve(Rc::clone(&s))?;
-            self.interpreter.interpret(Rc::clone(&s));
+
+            if resolver.success() {
+                self.interpreter.interpret(Rc::clone(&s));
+            }
         }
         Ok(())
     }

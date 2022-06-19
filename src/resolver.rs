@@ -84,6 +84,10 @@ impl<'a> Resolver<'a> {
         LoxResult::runtime_error(token, message);
     }
 
+    pub fn success(&self) -> bool {
+        !*self.had_error.borrow()
+    }
+
     pub fn resolve(&self, statements: Rc<Vec<Rc<Stmt>>>) -> Result<(), LoxResult> {
         for statement in statements.deref() {
             self.resolve_stmt(statement.clone())?;
