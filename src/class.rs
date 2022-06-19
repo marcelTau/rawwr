@@ -30,12 +30,6 @@ impl Class {
     }
 }
 
-//impl std::string::ToString for Class {
-    //fn to_string(&self) -> String {
-        //self.name.clone()
-    //}
-//}
-
 impl fmt::Display for Class {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.name)
@@ -44,7 +38,6 @@ impl fmt::Display for Class {
 
 impl LoxCallable for Class {
     fn call(&self, interpreter: &Interpreter, arguments: Vec<Object>) -> Result<Object, LoxResult> {
-        // Ok(Object::Instance(Instance::new(Rc::new(self.clone()))))
         unreachable!();
     }
     fn arity(&self) -> usize {

@@ -1,6 +1,5 @@
 var a = 10;
 {
-    var a = a + 5;
     print a;
 }
 

@@ -2,7 +2,6 @@ var a = 10;
 var b = 100;
 var c;
 print c = (a + b) * 3;
-print a, b, c;
 
 a = "A is now a string";
 
