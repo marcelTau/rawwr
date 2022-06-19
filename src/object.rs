@@ -1,5 +1,8 @@
 use core::fmt;
+use std::rc::Rc;
+
 use crate::callable::Callable;
+use crate::instance::Instance;
 use crate::class::*;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -8,7 +11,8 @@ pub enum Object {
     Str(String),
     Bool(bool),
     Func(Callable),
-    Class(Class),
+    Class(Rc<Class>),
+    Instance(Instance),
     Nil,
     ArithmeticError,
     DivByZeroError,
@@ -22,6 +26,7 @@ impl fmt::Display for Object {
             Object::Bool(x) => write!(f, "{}", x),
             Object::Func(_) => write!(f, "<func>"),
             Object::Class(c) => write!(f, "<Class {}>", c),
+            Object::Instance(i) => write!(f, "<Instance {}>", i),
             Object::Nil => write!(f, "nil"),
             Object::ArithmeticError => write!(f, "ArithmeticError"),
             Object::DivByZeroError => write!(f, "DivByZeroError"),

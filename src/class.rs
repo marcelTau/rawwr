@@ -1,6 +1,8 @@
 use std::fmt;
+use std::rc::Rc;
 use crate::callable::*;
 use crate::error::*;
+use crate::instance::Instance;
 use crate::object::*;
 use crate::interpreter::*;
 
@@ -14,6 +16,10 @@ impl Class {
         Self {
             name
         }
+    }
+
+    pub fn instantiate(&self, interpreter: &Interpreter, arguments: Vec<Object>, klass: Rc<Class>) -> Result<Object, LoxResult> {
+        Ok(Object::Instance(Instance::new(klass)))
     }
 }
 
@@ -31,7 +37,7 @@ impl fmt::Display for Class {
 
 impl LoxCallable for Class {
     fn call(&self, interpreter: &Interpreter, arguments: Vec<Object>) -> Result<Object, LoxResult> {
-        Ok(Object::Nil)
+        Ok(Object::Instance(Instance::new(Rc::new(self.clone()))))
     }
     fn arity(&self) -> usize {
         0

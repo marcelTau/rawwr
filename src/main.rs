@@ -16,6 +16,7 @@ mod native_functions;
 mod function;
 mod resolver;
 mod class;
+mod instance;
 
 use error::*;
 use interpreter::*;
