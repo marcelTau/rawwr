@@ -84,7 +84,8 @@ impl Parser {
             }
 
             if matches!(
-                self.peek().token_type, Class | Fun | Var | For | If | While | Print | Return
+                self.peek().token_type,
+                Class | Fun | Var | For | If | While | Print | Return
             ) {
                 return;
             }
@@ -284,10 +285,7 @@ impl Parser {
             None
         };
 
-        self.consume(
-            &Semicolon,
-            "Expect ';' after variable declaration.",
-        )?;
+        self.consume(&Semicolon, "Expect ';' after variable declaration.")?;
         Ok(Rc::new(Stmt::Var(Rc::new(VarStmt { name, initializer }))))
     }
 
@@ -314,10 +312,7 @@ impl Parser {
 
     fn function(&mut self, kind: &str) -> Result<Rc<Stmt>, LoxResult> {
         let name = self.consume(&Identifier, &format!("Expect {kind} name."))?;
-        self.consume(
-            &LeftParen,
-            &format!("Expect '(' after {kind} name."),
-        )?;
+        self.consume(&LeftParen, &format!("Expect '(' after {kind} name."))?;
 
         let mut params = Vec::new();
 
@@ -331,10 +326,7 @@ impl Parser {
             }
         }
         self.consume(&RightParen, "Expect ')' after parameters.")?;
-        self.consume(
-            &LeftBrace,
-            &format!("Expect '{{' before {kind} body."),
-        )?;
+        self.consume(&LeftBrace, &format!("Expect '{{' before {kind} body."))?;
 
         let body = self.block()?;
         Ok(Rc::new(Stmt::Function(Rc::new(FunctionStmt {
@@ -494,8 +486,7 @@ impl Parser {
             if match_token!(self, LeftParen) {
                 expr = self.finish_call(&Rc::new(expr))?;
             } else if match_token!(self, Dot) {
-                let name =
-                    self.consume(&Identifier, "Expect property name after '.'.")?;
+                let name = self.consume(&Identifier, "Expect property name after '.'.")?;
                 expr = Expr::Get(Rc::new(GetExpr {
                     object: Rc::new(expr),
                     name,
