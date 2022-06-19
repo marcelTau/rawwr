@@ -24,7 +24,18 @@ impl StmtVisitor<()> for Interpreter {
     fn visit_class_stmt(&self, _: Rc<Stmt>, stmt: &ClassStmt) -> Result<(), LoxResult> {
         self.environment.borrow().borrow_mut().define(&stmt.name.lexeme, Object::Nil);
 
-        let klass = Object::Class(Rc::new(Class::new(stmt.name.lexeme.clone())));
+        let mut methods = HashMap::new();
+
+        for method in stmt.methods.deref() {
+            if let Stmt::Function(method) = method.deref() {
+                let function = Object::Func(Callable { func: Rc::new( Function::new(method, &self.environment.borrow())) });
+                methods.insert(method.name.lexeme.clone(), function);
+            } else {
+                panic!("");
+            };
+        }
+
+        let klass = Object::Class(Rc::new(Class::new(stmt.name.lexeme.clone(), methods)));
 
         self.environment.borrow().borrow_mut().assign(&stmt.name, klass)?;
 

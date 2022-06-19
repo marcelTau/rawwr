@@ -1,5 +1,6 @@
 use std::fmt;
 use std::rc::Rc;
+use std::collections::HashMap;
 use crate::callable::*;
 use crate::error::*;
 use crate::instance::Instance;
@@ -9,17 +10,23 @@ use crate::interpreter::*;
 #[derive(Debug, PartialEq, Clone)]
 pub struct Class {
     name: String,
+    methods: HashMap<String, Object>,
 }
 
 impl Class {
-    pub fn new(name: String)  -> Self {
+    pub fn new(name: String, methods: HashMap::<String, Object>)  -> Self {
         Self {
-            name
+            name,
+            methods,
         }
     }
 
     pub fn instantiate(&self, interpreter: &Interpreter, arguments: Vec<Object>, klass: Rc<Class>) -> Result<Object, LoxResult> {
         Ok(Object::Instance(Rc::new(Instance::new(klass))))
+    }
+
+    pub fn find_method(&self, name: String) -> Option<Object> {
+        self.methods.get(&name).cloned()
     }
 }
 

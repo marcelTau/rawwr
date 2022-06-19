@@ -1,0 +1,11 @@
+class Foo {
+    bar(arg) {
+        print "bar from " + arg;
+    }
+}
+
+var f = Foo();
+f.bar("f.bar");
+
+var bc = f.bar;
+bc("bc");

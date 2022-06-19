@@ -13,6 +13,7 @@ use crate::token::*;
 enum FunctionType {
     None,
     Function,
+    Method,
 }
 
 pub struct Resolver<'a> {
@@ -26,6 +27,14 @@ impl<'a> StmtVisitor<()> for Resolver<'a> {
     fn visit_class_stmt(&self, _: Rc<Stmt>, stmt: &ClassStmt) -> Result<(), LoxResult> {
         self.declare(&stmt.name);
         self.define(&stmt.name);
+
+        for method in stmt.methods.deref() {
+            let declaration = FunctionType::Method;
+
+            if let Stmt::Function(method) = method.deref() {
+                self.resolve_function(method, declaration)?;
+            }
+        }
         Ok(())
     }
 
