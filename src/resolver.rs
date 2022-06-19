@@ -177,6 +177,12 @@ impl<'a> Resolver<'a> {
 }
 
 impl<'a> ExprVisitor<()> for Resolver<'a> {
+    fn visit_set_expr(&self, wrapper: Rc<Expr>, expr: &SetExpr) -> Result<(), LoxResult> {
+        self.resolve_expr(expr.value.clone())?;
+        self.resolve_expr(expr.object.clone())?;
+        Ok(())
+    }
+
     fn visit_get_expr(&self, _: Rc<Expr>, expr: &GetExpr) -> Result<(), LoxResult> {
         self.resolve_expr(expr.object.clone())?;
         Ok(())

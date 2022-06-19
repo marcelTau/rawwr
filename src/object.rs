@@ -12,7 +12,7 @@ pub enum Object {
     Bool(bool),
     Func(Callable),
     Class(Rc<Class>),
-    Instance(Instance),
+    Instance(Rc<Instance>),
     Nil,
     ArithmeticError,
     DivByZeroError,

@@ -19,7 +19,7 @@ impl Class {
     }
 
     pub fn instantiate(&self, interpreter: &Interpreter, arguments: Vec<Object>, klass: Rc<Class>) -> Result<Object, LoxResult> {
-        Ok(Object::Instance(Instance::new(klass)))
+        Ok(Object::Instance(Rc::new(Instance::new(klass))))
     }
 }
 
@@ -37,7 +37,8 @@ impl fmt::Display for Class {
 
 impl LoxCallable for Class {
     fn call(&self, interpreter: &Interpreter, arguments: Vec<Object>) -> Result<Object, LoxResult> {
-        Ok(Object::Instance(Instance::new(Rc::new(self.clone()))))
+        // Ok(Object::Instance(Instance::new(Rc::new(self.clone()))))
+        unreachable!();
     }
     fn arity(&self) -> usize {
         0

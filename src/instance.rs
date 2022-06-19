@@ -32,6 +32,11 @@ impl Instance {
             ))
         }
     }
+
+    pub fn set(&self, name: &Token, value: &Object) -> Result<(), LoxResult> {
+        self.fields.borrow_mut().insert(name.lexeme.clone(), value.clone());
+        Ok(())
+    }
 }
 
 impl fmt::Display for Instance {
