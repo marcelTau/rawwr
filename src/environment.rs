@@ -6,10 +6,11 @@ use std::cell::RefCell;
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 use std::rc::Rc;
+use std::ops::Deref;
 
 #[derive(Debug)]
 pub struct Environment {
-    values: HashMap<String, Object>,
+    pub values: HashMap<String, Object>,
     enclosing: Option<Rc<RefCell<Environment>>>,
 }
 
@@ -30,6 +31,15 @@ impl Environment {
 
     pub fn define(&mut self, name: &str, value: Object) {
         self.values.insert(name.to_string(), value);
+    }
+
+    pub fn get_at(&self, distance: usize, name: &str) -> Object {
+        if distance == 0 {
+            self.values.get(name).unwrap().clone()
+        } else {
+            //self.enclosing.as_ref().unwrap().borrow().get_at(distance - 1, name) // or just call it on self and not on self.enclosing
+            self.get_at(distance - 1, name)
+        }
     }
 
     pub fn get(&self, name: &Token) -> Result<Object, LoxResult> {

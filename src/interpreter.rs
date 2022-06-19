@@ -1,16 +1,16 @@
-use std::collections::HashMap;
 use std::cell::RefCell;
+use std::collections::HashMap;
 use std::rc::Rc;
 
+use crate::callable::*;
 use crate::environment::*;
 use crate::error::*;
 use crate::expr::*;
+use crate::function::*;
+use crate::native_functions::*;
 use crate::object::Object;
 use crate::stmt::*;
-use crate::token::TokenType;
-use crate::callable::*;
-use crate::native_functions::*;
-use crate::function::*;
+use crate::token::*;
 
 pub struct Interpreter {
     environment: RefCell<Rc<RefCell<Environment>>>,
@@ -66,7 +66,12 @@ impl StmtVisitor<()> for Interpreter {
 
     fn visit_function_stmt(&self, _: Rc<Stmt>, stmt: &FunctionStmt) -> Result<(), LoxResult> {
         let function = Function::new(stmt, &*self.environment.borrow());
-        self.environment.borrow().borrow_mut().define(stmt.name.lexeme.as_str(), Object::Func(Callable { func: Rc::new(function) }));
+        self.environment.borrow().borrow_mut().define(
+            stmt.name.lexeme.as_str(),
+            Object::Func(Callable {
+                func: Rc::new(function),
+            }),
+        );
         Ok(())
     }
 
@@ -128,8 +133,13 @@ impl ExprVisitor<Object> for Interpreter {
         }
     }
 
-    fn visit_variable_expr(&self, _: Rc<Expr>, expr: &VariableExpr) -> Result<Object, LoxResult> {
-        self.environment.borrow().borrow().get(&expr.name)
+    fn visit_variable_expr(
+        &self,
+        wrapper: Rc<Expr>,
+        expr: &VariableExpr,
+    ) -> Result<Object, LoxResult> {
+        // self.environment.borrow().borrow().get(&expr.name)
+        self.lookup_variable(&expr.name, wrapper)
     }
 
     fn visit_assign_expr(&self, _: Rc<Expr>, expr: &AssignExpr) -> Result<Object, LoxResult> {
@@ -173,7 +183,7 @@ impl ExprVisitor<Object> for Interpreter {
                         function.func.arity(),
                         arguments.len()
                     ),
-                ))
+                ));
             }
             function.func.call(self, arguments)
         } else {
@@ -188,20 +198,26 @@ impl ExprVisitor<Object> for Interpreter {
 impl Interpreter {
     pub fn new() -> Self {
         let globals = Rc::new(RefCell::new(Environment::new()));
-        globals.borrow_mut().define("clock", Object::Func(Callable {
-            func: Rc::new(NativeClock),
-        }));
+        globals.borrow_mut().define(
+            "clock",
+            Object::Func(Callable {
+                func: Rc::new(NativeClock),
+            }),
+        );
 
-        globals.borrow_mut().define("num_to_str", Object::Func(Callable {
-            func: Rc::new(NativeNumToString),
-        }));
+        globals.borrow_mut().define(
+            "num_to_str",
+            Object::Func(Callable {
+                func: Rc::new(NativeNumToString),
+            }),
+        );
 
         // println!("{:?}", globals);
 
         Interpreter {
             globals: Rc::clone(&globals),
             environment: RefCell::new(Rc::clone(&globals)),
-            locals: RefCell::new(HashMap::new())
+            locals: RefCell::new(HashMap::new()),
         }
     }
 
@@ -222,7 +238,11 @@ impl Interpreter {
         statement.accept(statement.clone(), self)
     }
 
-    pub fn execute_block(&self, statements: &Rc<Vec<Rc<Stmt>>>, environment: Environment) -> Result<(), LoxResult> {
+    pub fn execute_block(
+        &self,
+        statements: &Rc<Vec<Rc<Stmt>>>,
+        environment: Environment,
+    ) -> Result<(), LoxResult> {
         let previous = self.environment.replace(Rc::new(RefCell::new(environment)));
         let result = statements.iter().try_for_each(|s| self.execute(s.clone()));
         self.environment.replace(previous);
@@ -235,6 +255,18 @@ impl Interpreter {
 
     pub fn resolve(&self, expr: Rc<Expr>, depth: usize) {
         self.locals.borrow_mut().insert(expr, depth);
+    }
+
+    fn lookup_variable(&self, name: &Token, expr: Rc<Expr>) -> Result<Object, LoxResult> {
+        if let Some(distance) = self.locals.borrow().get(&expr) {
+            Ok(self
+                .environment
+                .borrow()
+                .borrow()
+                .get_at(*distance, &name.lexeme.clone()))
+        } else {
+            self.globals.borrow().get(name)
+        }
     }
 }
 
