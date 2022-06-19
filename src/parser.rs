@@ -92,11 +92,11 @@ impl Parser {
         }
     }
 
-    fn consume(&mut self, token_type: &TokenType, message: String) -> Result<Token, LoxResult> {
+    fn consume(&mut self, token_type: &TokenType, message: &str) -> Result<Token, LoxResult> {
         if self.check(token_type) {
-            Ok(self.advance()) //@todo maybe clone here
+            Ok(self.advance())
         } else {
-            Err(self.error(&self.peek(), &message))
+            Err(self.error(&self.peek(), message))
         }
     }
 
@@ -134,11 +134,8 @@ impl Parser {
     }
 
     fn class_declaration(&mut self) -> Result<Rc<Stmt>, LoxResult> {
-        let name = self.consume(&TokenType::Identifier, "Expect class name.".to_string())?;
-        self.consume(
-            &TokenType::LeftBrace,
-            "Expect '{{' before class body.".to_string(),
-        )?;
+        let name = self.consume(&TokenType::Identifier, "Expect class name.")?;
+        self.consume(&TokenType::LeftBrace, "Expect '{{' before class body.")?;
 
         let mut methods = Vec::new();
 
@@ -146,10 +143,7 @@ impl Parser {
             methods.push(self.function("method")?);
         }
 
-        self.consume(
-            &TokenType::RightBrace,
-            "Expect '}}' after class body.".to_string(),
-        )?;
+        self.consume(&TokenType::RightBrace, "Expect '}}' after class body.")?;
 
         Ok(Rc::new(Stmt::Class(Rc::new(ClassStmt {
             name,
@@ -187,7 +181,7 @@ impl Parser {
     }
 
     fn for_statement(&mut self) -> Result<Rc<Stmt>, LoxResult> {
-        self.consume(&TokenType::LeftParen, "Expect '(' after 'for'.".to_string())?;
+        self.consume(&TokenType::LeftParen, "Expect '(' after 'for'.")?;
 
         let initializer = if self.is_match(&[TokenType::Semicolon]) {
             None
@@ -205,10 +199,7 @@ impl Parser {
             }))
         };
 
-        self.consume(
-            &TokenType::Semicolon,
-            "Expect ';' after loop condition".to_string(),
-        )?;
+        self.consume(&TokenType::Semicolon, "Expect ';' after loop condition")?;
 
         let increment = if !self.check(&TokenType::RightParen) {
             Some(self.expression()?)
@@ -216,10 +207,7 @@ impl Parser {
             None
         };
 
-        self.consume(
-            &TokenType::RightParen,
-            "Expect ')' after for clauses".to_string(),
-        )?;
+        self.consume(&TokenType::RightParen, "Expect ')' after for clauses")?;
 
         let mut body = self.statement()?;
 
@@ -249,12 +237,9 @@ impl Parser {
     }
 
     fn if_statement(&mut self) -> Result<Stmt, LoxResult> {
-        self.consume(&TokenType::LeftParen, "Expect '(' after 'if'.".to_string())?;
+        self.consume(&TokenType::LeftParen, "Expect '(' after 'if'.")?;
         let condition = self.expression()?;
-        self.consume(
-            &TokenType::RightParen,
-            "Expect ')' after if condition.".to_string(),
-        )?;
+        self.consume(&TokenType::RightParen, "Expect ')' after if condition.")?;
 
         let then_branch = self.statement()?;
         let else_branch = if self.is_match(&[TokenType::Else]) {
@@ -272,7 +257,7 @@ impl Parser {
 
     fn print_statement(&mut self) -> Result<Stmt, LoxResult> {
         let value = self.expression()?;
-        self.consume(&TokenType::Semicolon, "Expect ';' after value.".to_string())?;
+        self.consume(&TokenType::Semicolon, "Expect ';' after value.")?;
         Ok(Stmt::Print(Rc::new(PrintStmt {
             expression: Rc::new(value),
         })))
@@ -287,15 +272,12 @@ impl Parser {
             None
         };
 
-        self.consume(
-            &TokenType::Semicolon,
-            "Expect ';' after return value.".to_string(),
-        )?;
+        self.consume(&TokenType::Semicolon, "Expect ';' after return value.")?;
         Ok(Stmt::Return(Rc::new(ReturnStmt { keyword, value })))
     }
 
     fn var_declaration(&mut self) -> Result<Rc<Stmt>, LoxResult> {
-        let name = self.consume(&TokenType::Identifier, "Expect variable name.".to_string())?;
+        let name = self.consume(&TokenType::Identifier, "Expect variable name.")?;
 
         let initializer = if self.is_match(&[TokenType::Equal]) {
             Some(Rc::new(self.expression()?))
@@ -305,22 +287,15 @@ impl Parser {
 
         self.consume(
             &TokenType::Semicolon,
-            "Expect ';' after variable declaration".to_string(),
+            "Expect ';' after variable declaration.",
         )?;
-
         Ok(Rc::new(Stmt::Var(Rc::new(VarStmt { name, initializer }))))
     }
 
     fn while_statement(&mut self) -> Result<Stmt, LoxResult> {
-        self.consume(
-            &TokenType::LeftParen,
-            "Expect '(' after 'while'.".to_string(),
-        )?;
+        self.consume(&TokenType::LeftParen, "Expect '(' after 'while'.")?;
         let condition = self.expression()?;
-        self.consume(
-            &TokenType::RightParen,
-            "Expect ')' after condition.".to_string(),
-        )?;
+        self.consume(&TokenType::RightParen, "Expect ')' after condition.")?;
 
         let body = self.statement()?;
 
@@ -332,43 +307,34 @@ impl Parser {
 
     fn expression_statement(&mut self) -> Result<Rc<Stmt>, LoxResult> {
         let expr = self.expression()?;
-        self.consume(
-            &TokenType::Semicolon,
-            "Expect ';' after expression.".to_string(),
-        )?;
+        self.consume(&TokenType::Semicolon, "Expect ';' after expression.")?;
         Ok(Rc::new(Stmt::Expression(Rc::new(ExpressionStmt {
             expression: Rc::new(expr),
         }))))
     }
 
     fn function(&mut self, kind: &str) -> Result<Rc<Stmt>, LoxResult> {
-        let name = self.consume(&TokenType::Identifier, format!("Expect {kind} name."))?;
+        let name = self.consume(&TokenType::Identifier, &format!("Expect {kind} name."))?;
         self.consume(
             &TokenType::LeftParen,
-            format!("Expect '(' after {kind} name."),
+            &format!("Expect '(' after {kind} name."),
         )?;
 
         let mut params = Vec::new();
 
         if !self.check(&TokenType::RightParen) {
-            params
-                .push(self.consume(&TokenType::Identifier, "Expect parameter name.".to_string())?);
+            params.push(self.consume(&TokenType::Identifier, "Expect parameter name.")?);
             while self.is_match(&[TokenType::Comma]) {
                 if params.len() >= 255 {
                     self.error(&self.peek(), "You can't have more than 255 parameters.");
                 }
-                params.push(
-                    self.consume(&TokenType::Identifier, "Expect parameter name.".to_string())?,
-                );
+                params.push(self.consume(&TokenType::Identifier, "Expect parameter name.")?);
             }
         }
-        self.consume(
-            &TokenType::RightParen,
-            "Expect ')' after parameters.".to_string(),
-        )?;
+        self.consume(&TokenType::RightParen, "Expect ')' after parameters.")?;
         self.consume(
             &TokenType::LeftBrace,
-            format!("Expect '{{' before {kind} body."),
+            &format!("Expect '{{' before {kind} body."),
         )?;
 
         let body = self.block()?;
@@ -385,10 +351,7 @@ impl Parser {
         while !self.check(&TokenType::RightBrace) && !self.is_at_end() {
             statements.push(self.declaration()?);
         }
-        self.consume(
-            &TokenType::RightBrace,
-            "Expect '}' after block.".to_string(),
-        )?;
+        self.consume(&TokenType::RightBrace, "Expect '}' after block.")?;
         Ok(statements)
     }
 
@@ -537,10 +500,8 @@ impl Parser {
             if self.is_match(&[TokenType::LeftParen]) {
                 expr = self.finish_call(&Rc::new(expr))?;
             } else if self.is_match(&[TokenType::Dot]) {
-                let name = self.consume(
-                    &TokenType::Identifier,
-                    "Expect property name after '.'.".to_string(),
-                )?;
+                let name =
+                    self.consume(&TokenType::Identifier, "Expect property name after '.'.")?;
                 expr = Expr::Get(Rc::new(GetExpr {
                     object: Rc::new(expr),
                     name,
@@ -566,10 +527,7 @@ impl Parser {
             }
         }
 
-        let paren = self.consume(
-            &TokenType::RightParen,
-            "Expect ')' after arguments.".to_string(),
-        )?;
+        let paren = self.consume(&TokenType::RightParen, "Expect ')' after arguments.")?;
 
         Ok(Expr::Call(Rc::new(CallExpr {
             callee: Rc::clone(callee),
@@ -608,10 +566,7 @@ impl Parser {
 
         if self.is_match(&[TokenType::LeftParen]) {
             let expr = self.expression()?;
-            self.consume(
-                &TokenType::RightParen,
-                "Expect ')' after expression.".to_string(),
-            )?;
+            self.consume(&TokenType::RightParen, "Expect ')' after expression.")?;
             return Ok(Expr::Grouping(Rc::new(GroupingExpr {
                 expression: Rc::new(expr),
             })));
