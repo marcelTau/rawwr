@@ -9,10 +9,17 @@ use crate::interpreter::*;
 use crate::stmt::*;
 use crate::token::*;
 
+#[derive(Eq, PartialEq)]
+enum FunctionType {
+    None,
+    Function,
+}
+
 pub struct Resolver<'a> {
     interpreter: &'a Interpreter,
     scopes: RefCell<Vec<HashMap<String, bool>>>,
     had_error: RefCell<bool>,
+    current_function: RefCell<FunctionType>,
 }
 
 impl<'a> StmtVisitor<()> for Resolver<'a> {
@@ -28,7 +35,7 @@ impl<'a> StmtVisitor<()> for Resolver<'a> {
     fn visit_function_stmt(&self, _: Rc<Stmt>, stmt: &FunctionStmt) -> Result<(), LoxResult> {
         self.declare(&stmt.name);
         self.define(&stmt.name);
-        self.resolve_function(stmt)?;
+        self.resolve_function(stmt, FunctionType::Function)?;
         Ok(())
     }
     fn visit_if_stmt(&self, _: Rc<Stmt>, stmt: &IfStmt) -> Result<(), LoxResult> {
@@ -45,6 +52,9 @@ impl<'a> StmtVisitor<()> for Resolver<'a> {
         Ok(())
     }
     fn visit_return_stmt(&self, _: Rc<Stmt>, stmt: &ReturnStmt) -> Result<(), LoxResult> {
+        if *self.current_function.borrow() == FunctionType::None {
+            self.error(&stmt.keyword, "Can't return from top level code.");
+        }
         if let Some(value) = &stmt.value {
             self.resolve_expr(value.clone())?;
         }
@@ -76,6 +86,7 @@ impl<'a> Resolver<'a> {
             interpreter,
             scopes: RefCell::new(Vec::new()),
             had_error: RefCell::new(false),
+            current_function: RefCell::new(FunctionType::None),
         }
     }
 
@@ -140,7 +151,8 @@ impl<'a> Resolver<'a> {
         }
     }
 
-    fn resolve_function(&self, function: &FunctionStmt) -> Result<(), LoxResult> {
+    fn resolve_function(&self, function: &FunctionStmt, function_type: FunctionType) -> Result<(), LoxResult> {
+        let enclosing_function = self.current_function.replace(function_type);
         self.begin_scope();
         for param in function.params.deref() {
             self.declare(param);
@@ -148,6 +160,7 @@ impl<'a> Resolver<'a> {
         }
         self.resolve(function.body.clone())?;
         self.end_scope();
+        self.current_function.replace(enclosing_function);
         Ok(())
     }
 }
