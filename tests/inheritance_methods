@@ -9,3 +9,5 @@ class Y < X {}
 var y = Y();
 
 y.A();
+y.B();
+y.C();

@@ -35,7 +35,13 @@ impl Class {
     }
 
     pub fn find_method(&self, name: String) -> Option<Object> {
-        self.methods.get(&name).cloned()
+        if let Some(method) = self.methods.get(&name) {
+            Some(method.clone())
+        } else if let Some(superclass) = &self.superclass {
+            superclass.find_method(name)
+        } else {
+            None
+        }
     }
 }
 
