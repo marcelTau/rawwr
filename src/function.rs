@@ -19,13 +19,17 @@ pub struct Function {
 }
 
 impl Function {
-    pub fn new(declaration: &FunctionStmt, closure: &Rc<RefCell<Environment>>, is_initializer: bool) -> Self {
+    pub fn new(
+        declaration: &FunctionStmt,
+        closure: &Rc<RefCell<Environment>>,
+        is_initializer: bool,
+    ) -> Self {
         Function {
             name: declaration.name.clone(),
             params: Rc::clone(&declaration.params),
             body: Rc::clone(&declaration.body),
             closure: Rc::clone(closure),
-            is_initializer
+            is_initializer,
         }
     }
 
@@ -38,7 +42,7 @@ impl Function {
             params: Rc::clone(&self.params),
             body: Rc::clone(&self.body),
             closure: Rc::new(RefCell::new(env)),
-            is_initializer: self.is_initializer.clone()
+            is_initializer: self.is_initializer.clone(),
         }))
     }
 }
@@ -79,7 +83,13 @@ impl LoxCallable for Function {
         }
 
         match interpreter.execute_block(&self.body, env) {
-            Err(LoxResult::ReturnValue { value }) => Ok(value),
+            Err(LoxResult::ReturnValue { value }) => {
+                if self.is_initializer {
+                    Ok(self.closure.borrow().get_at(0, "this"))
+                } else {
+                    Ok(value)
+                }
+            }
             Err(e) => Err(e),
             Ok(_) => {
                 if self.is_initializer {

@@ -12,6 +12,7 @@ use crate::token::*;
 #[derive(PartialEq)]
 enum FunctionType {
     None,
+    Initializer,
     Function,
     Method,
 }
@@ -37,12 +38,19 @@ impl<'a> StmtVisitor<()> for Resolver<'a> {
         self.define(&stmt.name);
 
         self.begin_scope();
-        self.scopes.borrow_mut().last_mut().unwrap().insert("this".to_string(), true);
+        self.scopes
+            .borrow_mut()
+            .last_mut()
+            .unwrap()
+            .insert("this".to_string(), true);
 
         for method in stmt.methods.deref() {
-            let declaration = FunctionType::Method;
-
             if let Stmt::Function(method) = method.deref() {
+                let declaration = if method.name.lexeme == "init" {
+                    FunctionType::Initializer
+                } else {
+                    FunctionType::Method
+                };
                 self.resolve_function(method, declaration)?;
             }
         }
@@ -89,7 +97,11 @@ impl<'a> StmtVisitor<()> for Resolver<'a> {
         if *self.current_function.borrow() == FunctionType::None {
             self.error(&stmt.keyword, "Can't return from top level code.");
         }
+
         if let Some(value) = &stmt.value {
+            if *self.current_function.borrow() == FunctionType::Initializer {
+                self.error(&stmt.keyword, "Can't return a value from an initializer.");
+            }
             self.resolve_expr(value.clone())?;
         }
         Ok(())
@@ -186,7 +198,11 @@ impl<'a> Resolver<'a> {
         }
     }
 
-    fn resolve_function(&self, function: &FunctionStmt, function_type: FunctionType) -> Result<(), LoxResult> {
+    fn resolve_function(
+        &self,
+        function: &FunctionStmt,
+        function_type: FunctionType,
+    ) -> Result<(), LoxResult> {
         let enclosing_function = self.current_function.replace(function_type);
         self.begin_scope();
         for param in function.params.deref() {
@@ -246,12 +262,14 @@ impl<'a> ExprVisitor<()> for Resolver<'a> {
                 .get(&expr.name.lexeme.clone())
                 == Some(&false)
         {
-            Err(LoxResult::runtime_error(&expr.name, "Can't read local variable in it's own initializer"))
+            Err(LoxResult::runtime_error(
+                &expr.name,
+                "Can't read local variable in it's own initializer",
+            ))
         } else {
             self.resolve_local(wrapper, &expr.name);
             Ok(())
         }
-
     }
     fn visit_assign_expr(&self, wrapper: Rc<Expr>, expr: &AssignExpr) -> Result<(), LoxResult> {
         self.resolve_expr(expr.value.clone())?;
