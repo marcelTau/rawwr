@@ -1,0 +1,8 @@
+class X {
+    foo() {
+        super.foo();
+        print "done";
+    }
+}
+
+X().foo();

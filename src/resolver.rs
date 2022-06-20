@@ -20,6 +20,7 @@ enum FunctionType {
 #[derive(PartialEq)]
 enum ClassType {
     None,
+    Subclass,
     Class,
 }
 
@@ -43,6 +44,7 @@ impl<'a> StmtVisitor<()> for Resolver<'a> {
                     self.error(&v.name, "A class can't inherit from itself.");
                 }
             }
+            self.current_class.replace(ClassType::Subclass);
             self.resolve_expr(superclass.clone())?;
 
             self.begin_scope();
@@ -233,6 +235,15 @@ impl<'a> Resolver<'a> {
 
 impl<'a> ExprVisitor<()> for Resolver<'a> {
     fn visit_super_expr(&self, wrapper: Rc<Expr>, expr: &SuperExpr) -> Result<(), LoxResult> {
+        match *self.current_class.borrow() {
+            ClassType::None => {
+                self.error(&expr.keyword, "Can't use 'super' outside of a class.");
+            }
+            ClassType::Class => {
+                self.error(&expr.keyword, "Can't use 'super' in a class with no superclass.");
+            }
+            ClassType::Subclass => {}
+        }
         self.resolve_local(wrapper, &expr.keyword);
         Ok(())
     }
