@@ -28,7 +28,8 @@ impl StmtVisitor<()> for Interpreter {
 
         for method in stmt.methods.deref() {
             if let Stmt::Function(method) = method.deref() {
-                let function = Object::Func(Rc::new( Function::new(method, &self.environment.borrow())));
+                let is_init = method.name.lexeme == "init";
+                let function = Object::Func(Rc::new( Function::new(method, &self.environment.borrow(), is_init)));
                 methods.insert(method.name.lexeme.clone(), function);
             } else {
                 panic!("");
@@ -87,7 +88,7 @@ impl StmtVisitor<()> for Interpreter {
     }
 
     fn visit_function_stmt(&self, _: Rc<Stmt>, stmt: &FunctionStmt) -> Result<(), LoxResult> {
-        let function = Function::new(stmt, &*self.environment.borrow());
+        let function = Function::new(stmt, &*self.environment.borrow(), false);
         self.environment.borrow().borrow_mut().define(
             stmt.name.lexeme.as_str(),
             Object::Func(Rc::new(function)),

@@ -15,15 +15,17 @@ pub struct Function {
     params: Rc<Vec<Token>>,
     body: Rc<Vec<Rc<Stmt>>>,
     closure: Rc<RefCell<Environment>>,
+    is_initializer: bool,
 }
 
 impl Function {
-    pub fn new(declaration: &FunctionStmt, closure: &Rc<RefCell<Environment>>) -> Self {
+    pub fn new(declaration: &FunctionStmt, closure: &Rc<RefCell<Environment>>, is_initializer: bool) -> Self {
         Function {
             name: declaration.name.clone(),
             params: Rc::clone(&declaration.params),
             body: Rc::clone(&declaration.body),
             closure: Rc::clone(closure),
+            is_initializer
         }
     }
 
@@ -35,7 +37,8 @@ impl Function {
             name: self.name.clone(),
             params: Rc::clone(&self.params),
             body: Rc::clone(&self.body),
-            closure: Rc::new(RefCell::new(env))
+            closure: Rc::new(RefCell::new(env)),
+            is_initializer: self.is_initializer.clone()
         }))
     }
 }
@@ -53,6 +56,7 @@ impl Clone for Function {
             params: Rc::clone(&self.params),
             body: Rc::clone(&self.body),
             closure: Rc::clone(&self.closure),
+            is_initializer: self.is_initializer.clone(),
         }
     }
 }
@@ -77,7 +81,13 @@ impl LoxCallable for Function {
         match interpreter.execute_block(&self.body, env) {
             Err(LoxResult::ReturnValue { value }) => Ok(value),
             Err(e) => Err(e),
-            Ok(_) => Ok(Object::Nil),
+            Ok(_) => {
+                if self.is_initializer {
+                    Ok(self.closure.borrow().get_at(0, "this"))
+                } else {
+                    Ok(Object::Nil)
+                }
+            }
         }
     }
 

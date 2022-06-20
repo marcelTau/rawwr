@@ -24,7 +24,13 @@ impl Class {
         arguments: Vec<Object>,
         klass: Rc<Class>,
     ) -> Result<Object, LoxResult> {
-        Ok(Object::Instance(Rc::new(Instance::new(klass))))
+        let instance = Object::Instance(Rc::new(Instance::new(klass)));
+        if let Some(Object::Func(initializer)) = self.find_method("init".to_string()) {
+            if let Object::Func(init) = initializer.bind(&instance) {
+                init.call(interpreter, arguments)?;
+            }
+        };
+        Ok(instance)
     }
 
     pub fn find_method(&self, name: String) -> Option<Object> {
@@ -49,6 +55,10 @@ impl LoxCallable for Class {
         unreachable!();
     }
     fn arity(&self) -> usize {
-        0
+        if let Some(Object::Func(initializer)) = self.find_method("init".to_string()) {
+            initializer.arity()
+        } else {
+            0
+        }
     }
 }
