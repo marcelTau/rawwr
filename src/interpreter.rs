@@ -8,7 +8,7 @@ use crate::environment::*;
 use crate::error::*;
 use crate::expr::*;
 use crate::function::*;
-//use crate::native_functions::*;
+use crate::native_functions::*;
 use crate::object::Object;
 use crate::stmt::*;
 use crate::token::*;
@@ -227,6 +227,7 @@ impl ExprVisitor<Object> for Interpreter {
 
         let (callfunc, klass) : (Option<Rc<dyn LoxCallable>>, Option<Rc<Class>>) = match callee {
             Object::Func(f) => (Some(f), None),
+            Object::Native(n) => (Some(n.func.clone()), None),
             Object::Class(c) => {
                 let klass = Rc::clone(&c);
                 (Some(c), Some(klass))
@@ -258,17 +259,15 @@ impl ExprVisitor<Object> for Interpreter {
 impl Interpreter {
     pub fn new() -> Self {
         let globals = Rc::new(RefCell::new(Environment::new()));
-        /*
         globals.borrow_mut().define(
             "clock",
-            Object::Func(Rc::new(NativeClock {})),
+            Object::Native(Rc::new(Native { func: Rc::new(NativeClock) })),
         );
 
         globals.borrow_mut().define(
             "num_to_str",
-            Object::Func(Rc::new(NativeNumToString))
+            Object::Native(Rc::new(Native { func: Rc::new(NativeNumToString) })),
         );
-        */
 
         // println!("{:?}", globals);
 

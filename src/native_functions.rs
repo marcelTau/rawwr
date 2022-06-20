@@ -1,4 +1,5 @@
 use std::fmt;
+use std::ptr;
 use std::rc::Rc;
 use std::time::{SystemTime, UNIX_EPOCH};
 use crate::callable::*;
@@ -7,7 +8,32 @@ use crate::interpreter::Interpreter;
 use crate::error::*;
 use crate::class::*;
 
-//use crate::function::*;
+#[derive(Clone)]
+pub struct Native {
+    pub func: Rc<dyn LoxCallable>,
+}
+
+impl fmt::Display for Native {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "<Native function>")
+    }
+}
+
+impl fmt::Debug for Native {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "<Native function>")
+    }
+}
+
+impl PartialEq for Native {
+    fn eq(&self, other: &Self) -> bool {
+        ptr::eq(
+            Rc::as_ptr(&self.func) as *const (),
+            Rc::as_ptr(&other.func) as *const (),
+        )
+    } 
+}
+
 
 pub struct NativeClock;
 

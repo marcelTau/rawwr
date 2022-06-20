@@ -5,6 +5,7 @@ use std::rc::Rc;
 use crate::instance::Instance;
 use crate::class::*;
 use crate::function::*;
+use crate::native_functions::*;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Object {
@@ -14,6 +15,7 @@ pub enum Object {
     Func(Rc<Function>),
     Class(Rc<Class>),
     Instance(Rc<Instance>),
+    Native(Rc<Native>),
     Nil,
     ArithmeticError,
     DivByZeroError,
@@ -28,6 +30,7 @@ impl fmt::Display for Object {
             Object::Func(_) => write!(f, "<func>"),
             Object::Class(c) => write!(f, "<Class {}>", c),
             Object::Instance(i) => write!(f, "<Instance {}>", i),
+            Object::Native(n) => write!(f, "<Native {}>", n),
             Object::Nil => write!(f, "nil"),
             Object::ArithmeticError => write!(f, "ArithmeticError"),
             Object::DivByZeroError => write!(f, "DivByZeroError"),
