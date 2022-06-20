@@ -1,9 +1,10 @@
 use std::cell::RefCell;
 use std::collections::HashMap;
-use std::rc::Rc;
 use std::ops::Deref;
+use std::rc::Rc;
 
 use crate::callable::*;
+use crate::class::*;
 use crate::environment::*;
 use crate::error::*;
 use crate::expr::*;
@@ -12,7 +13,6 @@ use crate::native_functions::*;
 use crate::object::Object;
 use crate::stmt::*;
 use crate::token::*;
-use crate::class::*;
 
 pub struct Interpreter {
     environment: RefCell<Rc<RefCell<Environment>>>,
@@ -27,7 +27,10 @@ impl StmtVisitor<()> for Interpreter {
             if let Object::Class(c) = superclass {
                 Some(c)
             } else if let Expr::Variable(v) = superclass_expr.deref() {
-                return Err(LoxResult::runtime_error(&v.name, "Superclass must be a class."));
+                return Err(LoxResult::runtime_error(
+                    &v.name,
+                    "Superclass must be a class.",
+                ));
             } else {
                 panic!("Could not extract variable expr.");
             }
@@ -35,21 +38,48 @@ impl StmtVisitor<()> for Interpreter {
             None
         };
 
-        self.environment.borrow().borrow_mut().define(&stmt.name.lexeme, Object::Nil);
+        self.environment
+            .borrow()
+            .borrow_mut()
+            .define(&stmt.name.lexeme, Object::Nil);
+
+        let enclosing = if let Some(ref s) = superclass {
+            let mut e = Environment::new_with_enclosing(self.environment.borrow().clone());
+            e.define("super", Object::Class(s.clone()));
+            Some(self.environment.replace(Rc::new(RefCell::new(e))))
+        } else {
+            None
+        };
 
         let mut methods = HashMap::new();
 
         for method in stmt.methods.deref() {
             if let Stmt::Function(method) = method.deref() {
                 let is_init = method.name.lexeme == "init";
-                let function = Object::Func(Rc::new( Function::new(method, &self.environment.borrow(), is_init)));
+                let function = Object::Func(Rc::new(Function::new(
+                    method,
+                    &self.environment.borrow(),
+                    is_init,
+                )));
                 methods.insert(method.name.lexeme.clone(), function);
             } else {
                 panic!("");
             };
         }
-        let klass = Object::Class(Rc::new(Class::new(stmt.name.lexeme.clone(), superclass, methods)));
-        self.environment.borrow().borrow_mut().assign(&stmt.name, klass)?;
+        let klass = Object::Class(Rc::new(Class::new(
+            stmt.name.lexeme.clone(),
+            superclass,
+            methods,
+        )));
+
+        if let Some(prev) = enclosing {
+            self.environment.replace(prev);
+        }
+
+        self.environment
+            .borrow()
+            .borrow_mut()
+            .assign(&stmt.name, klass)?;
         Ok(())
     }
 
@@ -102,10 +132,10 @@ impl StmtVisitor<()> for Interpreter {
 
     fn visit_function_stmt(&self, _: Rc<Stmt>, stmt: &FunctionStmt) -> Result<(), LoxResult> {
         let function = Function::new(stmt, &*self.environment.borrow(), false);
-        self.environment.borrow().borrow_mut().define(
-            stmt.name.lexeme.as_str(),
-            Object::Func(Rc::new(function)),
-        );
+        self.environment
+            .borrow()
+            .borrow_mut()
+            .define(stmt.name.lexeme.as_str(), Object::Func(Rc::new(function)));
         Ok(())
     }
 
@@ -119,6 +149,32 @@ impl StmtVisitor<()> for Interpreter {
 }
 
 impl ExprVisitor<Object> for Interpreter {
+    fn visit_super_expr(&self, wrapper: Rc<Expr>, expr: &SuperExpr) -> Result<Object, LoxResult> {
+        let distance = *self.locals.borrow().get(&wrapper).unwrap();
+        let superclass = self
+            .environment
+            .borrow()
+            .borrow()
+            .get_at(distance, "super");
+
+        let object = self.environment.borrow().borrow().get_at(distance - 1, "this");
+
+        if let Object::Class(sc) = superclass {
+            let method = sc.find_method(expr.method.lexeme.clone());
+            if let Some(method) = method {
+                if let Object::Func(func) = method {
+                    Ok(func.bind(&object))
+                } else {
+                    panic!("method was not found");
+                }
+            } else {
+                Err(LoxResult::runtime_error(&expr.method, &format!("Undefined property '{}'.", expr.method.lexeme)))
+            }
+        } else {
+            Err(LoxResult::runtime_error(&expr.method, &format!("Undefined property '{}'.", expr.method.lexeme)))
+        }
+    }
+
     fn visit_this_expr(&self, wrapper: Rc<Expr>, expr: &ThisExpr) -> Result<Object, LoxResult> {
         self.lookup_variable(&expr.keyword, wrapper)
     }
@@ -129,8 +185,11 @@ impl ExprVisitor<Object> for Interpreter {
             let value = self.evaluate(expr.value.clone())?;
             inst.set(&expr.name, &value)?;
             Ok(value)
-        } else{
-            Err(LoxResult::runtime_error(&expr.name, "Only instances have fields."))
+        } else {
+            Err(LoxResult::runtime_error(
+                &expr.name,
+                "Only instances have fields.",
+            ))
         }
     }
 
@@ -139,7 +198,10 @@ impl ExprVisitor<Object> for Interpreter {
         if let Object::Instance(inst) = object {
             inst.get(&expr.name, &inst)
         } else {
-            Err(LoxResult::runtime_error(&expr.name, "Only instances have properties."))
+            Err(LoxResult::runtime_error(
+                &expr.name,
+                "Only instances have properties.",
+            ))
         }
     }
 
@@ -225,7 +287,7 @@ impl ExprVisitor<Object> for Interpreter {
                 return Ok(left);
             }
         } else if !self.is_truthy(&left) {
-                return Ok(left);
+            return Ok(left);
         }
         self.evaluate(expr.right.clone())
     }
@@ -238,14 +300,14 @@ impl ExprVisitor<Object> for Interpreter {
             arguments.push(self.evaluate(argument.clone())?);
         }
 
-        let (callfunc, klass) : (Option<Rc<dyn LoxCallable>>, Option<Rc<Class>>) = match callee {
+        let (callfunc, klass): (Option<Rc<dyn LoxCallable>>, Option<Rc<Class>>) = match callee {
             Object::Func(f) => (Some(f), None),
             Object::Native(n) => (Some(n.func.clone()), None),
             Object::Class(c) => {
                 let klass = Rc::clone(&c);
                 (Some(c), Some(klass))
-            },
-            _ => (None, None)
+            }
+            _ => (None, None),
         };
 
         if let Some(callfunc) = callfunc {
@@ -274,12 +336,16 @@ impl Interpreter {
         let globals = Rc::new(RefCell::new(Environment::new()));
         globals.borrow_mut().define(
             "clock",
-            Object::Native(Rc::new(Native { func: Rc::new(NativeClock) })),
+            Object::Native(Rc::new(Native {
+                func: Rc::new(NativeClock),
+            })),
         );
 
         globals.borrow_mut().define(
             "num_to_str",
-            Object::Native(Rc::new(Native { func: Rc::new(NativeNumToString) })),
+            Object::Native(Rc::new(Native {
+                func: Rc::new(NativeNumToString),
+            })),
         );
 
         // println!("{:?}", globals);

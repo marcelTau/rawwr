@@ -32,6 +32,8 @@ impl Environment {
         self.values.insert(name.to_string(), value);
     }
 
+    // @todo this function should return an Option<Object> or errors could happen if something is
+    // not defined.
     pub fn get_at(&self, distance: usize, name: &str) -> Object {
         if distance == 0 {
             self.values.get(name).unwrap().clone()

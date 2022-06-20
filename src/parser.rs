@@ -554,6 +554,16 @@ impl Parser {
             })));
         }
 
+        if match_token!(self, Super) {
+            let keyword = self.previous();
+            self.consume(&Dot, "Expect '.' after 'super'.")?;
+            let method = self.consume(&Identifier, "Expect superclass method name.")?;
+            return Ok(Expr::Super(Rc::new(SuperExpr {
+                keyword,
+                method
+            })));
+        }
+
         if match_token!(self, This) {
             return Ok(Expr::This(Rc::new(ThisExpr {
                 keyword: self.previous(),
