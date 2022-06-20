@@ -11,11 +11,12 @@ use std::rc::Rc;
 pub struct Class {
     name: String,
     methods: HashMap<String, Object>,
+    superclass: Option<Rc<Class>>,
 }
 
 impl Class {
-    pub fn new(name: String, methods: HashMap<String, Object>) -> Self {
-        Self { name, methods }
+    pub fn new(name: String, superclass: Option<Rc<Class>>, methods:  HashMap<String, Object>) -> Self {
+        Self { name, methods, superclass }
     }
 
     pub fn instantiate(

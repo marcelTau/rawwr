@@ -157,7 +157,7 @@ fn main() -> Result<(), std::io::Error> {
 
     generate_ast("./src".to_string(), "Stmt".to_string(), &vec![
         "Block          : Rc<Vec<Rc<Stmt>>> statements".to_string(),
-        "Class          : Token name, Rc<Vec<Rc<Stmt>>> methods".to_string(),
+        "Class          : Token name, Option<Rc<Expr>> superclass, Rc<Vec<Rc<Stmt>>> methods".to_string(),
         "Expression     : Rc<Expr> expression".to_string(),
         "Function       : Token name, Rc<Vec<Token>> params, Rc<Vec<Rc<Stmt>>> body".to_string(),
         "If             : Rc<Expr> condition, Rc<Stmt> then_branch, Option<Rc<Stmt>> else_branch".to_string(),

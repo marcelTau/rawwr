@@ -94,6 +94,7 @@ pub struct BlockStmt {
 
 pub struct ClassStmt {
     pub name: Token,
+    pub superclass: Option<Rc<Expr>>,
     pub methods: Rc<Vec<Rc<Stmt>>>,
 }
 

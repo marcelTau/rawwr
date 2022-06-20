@@ -136,6 +136,16 @@ impl Parser {
 
     fn class_declaration(&mut self) -> Result<Rc<Stmt>, LoxResult> {
         let name = self.consume(&Identifier, "Expect class name.")?;
+
+        let superclass = if match_token!(self, Less) {
+            self.consume(&Identifier, "Expect superclass name.")?;
+            Some(Rc::new(Expr::Variable (Rc::new(VariableExpr {
+                name: self.previous()
+            }))))
+        } else {
+            None
+        };
+
         self.consume(&LeftBrace, "Expect '{{' before class body.")?;
 
         let mut methods = Vec::new();
@@ -148,6 +158,7 @@ impl Parser {
 
         Ok(Rc::new(Stmt::Class(Rc::new(ClassStmt {
             name,
+            superclass,
             methods: Rc::new(methods),
         }))))
     }

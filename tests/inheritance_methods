@@ -1,0 +1,11 @@
+class X {
+    A() { print "A"; }
+    B() { print "B"; }
+    C() { print "C"; }
+}
+
+class Y < X {}
+
+var y = Y();
+
+y.A();
