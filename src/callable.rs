@@ -1,13 +1,14 @@
 use crate::error::*;
 use crate::interpreter::Interpreter;
 use crate::object::Object;
+use crate::class::*;
 
 use core::fmt;
 use std::ptr;
 use std::rc::Rc;
 
 pub trait LoxCallable: fmt::Display {
-    fn call(&self, interpreter: &Interpreter, arguments: Vec<Object>) -> Result<Object, LoxResult>;
+    fn call(&self, interpreter: &Interpreter, arguments: Vec<Object>, klass: Option<Rc<Class>>) -> Result<Object, LoxResult>;
     fn arity(&self) -> usize;
 }
 
@@ -17,8 +18,8 @@ pub struct Callable {
 }
 
 impl LoxCallable for Callable {
-    fn call(&self, interpreter: &Interpreter, arguments: Vec<Object>) -> Result<Object, LoxResult> {
-        self.func.call(interpreter, arguments)
+    fn call(&self, interpreter: &Interpreter, arguments: Vec<Object>, _klass: Option<Rc<Class>>) -> Result<Object, LoxResult> {
+        self.func.call(interpreter, arguments, None)
     }
 
     fn arity(&self) -> usize {

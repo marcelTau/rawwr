@@ -1,15 +1,18 @@
 use std::fmt;
+use std::rc::Rc;
 use std::time::{SystemTime, UNIX_EPOCH};
 use crate::callable::*;
 use crate::object::Object;
 use crate::interpreter::Interpreter;
 use crate::error::*;
+use crate::class::*;
+
 //use crate::function::*;
 
 pub struct NativeClock;
 
 impl LoxCallable for NativeClock {
-    fn call(&self, _interpreter: &Interpreter, _arguments: Vec<Object>) -> Result<Object, LoxResult> {
+    fn call(&self, _interpreter: &Interpreter, _arguments: Vec<Object>, klass: Option<Rc<Class>>) -> Result<Object, LoxResult> {
         let sys_time = SystemTime::now();
         match sys_time.duration_since(UNIX_EPOCH) {
             Ok(t) => Ok(Object::Num(t.as_millis() as f64)),
@@ -32,7 +35,7 @@ impl fmt::Display for NativeClock {
 pub struct NativeNumToString;
 
 impl LoxCallable for NativeNumToString {
-    fn call(&self, _interpreter: &Interpreter, arguments: Vec<Object>) -> Result<Object, LoxResult> {
+    fn call(&self, _interpreter: &Interpreter, arguments: Vec<Object>, klass: Option<Rc<Class>>) -> Result<Object, LoxResult> {
         Ok(Object::Str(format!("{}", arguments[0])))
     }
 

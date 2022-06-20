@@ -27,7 +27,7 @@ impl Class {
         let instance = Object::Instance(Rc::new(Instance::new(klass)));
         if let Some(Object::Func(initializer)) = self.find_method("init".to_string()) {
             if let Object::Func(init) = initializer.bind(&instance) {
-                init.call(interpreter, arguments)?;
+                init.call(interpreter, arguments, None)?;
             }
         };
         Ok(instance)
@@ -51,8 +51,8 @@ impl fmt::Display for Class {
 }
 
 impl LoxCallable for Class {
-    fn call(&self, interpreter: &Interpreter, arguments: Vec<Object>) -> Result<Object, LoxResult> {
-        unreachable!();
+    fn call(&self, interpreter: &Interpreter, arguments: Vec<Object>, klass: Option<Rc<Class>>) -> Result<Object, LoxResult> {
+        self.instantiate(interpreter, arguments, klass.unwrap())
     }
     fn arity(&self) -> usize {
         if let Some(Object::Func(initializer)) = self.find_method("init".to_string()) {

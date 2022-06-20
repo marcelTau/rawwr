@@ -9,6 +9,7 @@ use crate::interpreter::*;
 use crate::object::*;
 use crate::stmt::*;
 use crate::token::*;
+use crate::class::*;
 
 pub struct Function {
     name: Token,
@@ -75,7 +76,7 @@ impl PartialEq for Function {
 }
 
 impl LoxCallable for Function {
-    fn call(&self, interpreter: &Interpreter, arguments: Vec<Object>) -> Result<Object, LoxResult> {
+    fn call(&self, interpreter: &Interpreter, arguments: Vec<Object>, klass: Option<Rc<Class>>) -> Result<Object, LoxResult> {
         let mut env = Environment::new_with_enclosing(Rc::clone(&self.closure));
 
         for (param, arg) in self.params.iter().zip(arguments.iter()) {

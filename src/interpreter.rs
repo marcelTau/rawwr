@@ -225,30 +225,27 @@ impl ExprVisitor<Object> for Interpreter {
             arguments.push(self.evaluate(argument.clone())?);
         }
 
-        if let Object::Func(function) = callee {
-            if arguments.len() != function.arity() {
+        let (callfunc, klass) : (Option<Rc<dyn LoxCallable>>, Option<Rc<Class>>) = match callee {
+            Object::Func(f) => (Some(f), None),
+            Object::Class(c) => {
+                let klass = Rc::clone(&c);
+                (Some(c), Some(klass))
+            },
+            _ => (None, None)
+        };
+
+        if let Some(callfunc) = callfunc {
+            if arguments.len() != callfunc.arity() {
                 return Err(LoxResult::runtime_error(
                     &expr.paren,
                     &format!(
                         "Expected {} arguments but got {}.",
-                        function.arity(),
+                        callfunc.arity(),
                         arguments.len()
                     ),
                 ));
             }
-            function.call(self, arguments)
-        } else if let Object::Class(class) = callee {
-            if arguments.len() != class.arity() {
-                return Err(LoxResult::runtime_error(
-                    &expr.paren,
-                    &format!(
-                        "Expected {} arguments but got {}.",
-                        class.arity(),
-                        arguments.len()
-                    ),
-                ));
-            }
-            class.instantiate(self, arguments, Rc::clone(&class))
+            callfunc.call(self, arguments, klass)
         } else {
             Err(LoxResult::runtime_error(
                 &expr.paren,
