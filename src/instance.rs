@@ -43,6 +43,14 @@ impl Instance {
 
 impl fmt::Display for Instance {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{} with {:#?}", self.klass, self.fields)
+        let mut fields = Vec::new();
+        for (k, v) in self.fields.borrow().iter() {
+            if let Object::Str(value) = v {
+                fields.push(format!("{k} = \"{v}\""));
+            } else {
+                fields.push(format!("{k} = {v}"));
+            }
+        }
+        write!(f, "{} with {{ {} }}", self.klass, fields.join(", "))
     }
 }

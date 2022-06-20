@@ -57,6 +57,9 @@ impl Lox {
             print!("> ");
             io::stdout().flush().unwrap();
             io::stdin().read_line(&mut line).unwrap();
+            if matches!(line.as_str(), "exit" | "exit()" | "quit" | "quit()") {
+                std::process::exit(0);
+            }
             let _ = self.run(&line);
             line.clear();
         }

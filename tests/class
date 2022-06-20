@@ -4,4 +4,10 @@ class A {
     }
 }
 
+var a = A();
+
+a.name = "my name";
+a.age = 10;
+
 print A;
+print a;
