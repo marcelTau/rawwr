@@ -28,17 +28,14 @@ impl StmtVisitor<()> for Interpreter {
 
         for method in stmt.methods.deref() {
             if let Stmt::Function(method) = method.deref() {
-                let function = Object::Func(Callable { func: Rc::new( Function::new(method, &self.environment.borrow())) });
+                let function = Object::Func(Rc::new( Function::new(method, &self.environment.borrow())));
                 methods.insert(method.name.lexeme.clone(), function);
             } else {
                 panic!("");
             };
         }
-
         let klass = Object::Class(Rc::new(Class::new(stmt.name.lexeme.clone(), methods)));
-
         self.environment.borrow().borrow_mut().assign(&stmt.name, klass)?;
-
         Ok(())
     }
 
@@ -93,9 +90,7 @@ impl StmtVisitor<()> for Interpreter {
         let function = Function::new(stmt, &*self.environment.borrow());
         self.environment.borrow().borrow_mut().define(
             stmt.name.lexeme.as_str(),
-            Object::Func(Callable {
-                func: Rc::new(function),
-            }),
+            Object::Func(Rc::new(function)),
         );
         Ok(())
     }
@@ -110,6 +105,9 @@ impl StmtVisitor<()> for Interpreter {
 }
 
 impl ExprVisitor<Object> for Interpreter {
+    fn visit_this_expr(&self, wrapper: Rc<Expr>, expr: &ThisExpr) -> Result<Object, LoxResult> {
+        unimplemented!()
+    }
     fn visit_set_expr(&self, wrapper: Rc<Expr>, expr: &SetExpr) -> Result<Object, LoxResult> {
         let object = self.evaluate(expr.object.clone())?;
 
@@ -227,17 +225,17 @@ impl ExprVisitor<Object> for Interpreter {
         }
 
         if let Object::Func(function) = callee {
-            if arguments.len() != function.func.arity() {
+            if arguments.len() != function.arity() {
                 return Err(LoxResult::runtime_error(
                     &expr.paren,
                     &format!(
                         "Expected {} arguments but got {}.",
-                        function.func.arity(),
+                        function.arity(),
                         arguments.len()
                     ),
                 ));
             }
-            function.func.call(self, arguments)
+            function.call(self, arguments)
         } else if let Object::Class(class) = callee {
             if arguments.len() != class.arity() {
                 return Err(LoxResult::runtime_error(
@@ -262,19 +260,17 @@ impl ExprVisitor<Object> for Interpreter {
 impl Interpreter {
     pub fn new() -> Self {
         let globals = Rc::new(RefCell::new(Environment::new()));
+        /*
         globals.borrow_mut().define(
             "clock",
-            Object::Func(Callable {
-                func: Rc::new(NativeClock),
-            }),
+            Object::Func(Rc::new(NativeClock {})),
         );
 
         globals.borrow_mut().define(
             "num_to_str",
-            Object::Func(Callable {
-                func: Rc::new(NativeNumToString),
-            }),
+            Object::Func(Rc::new(NativeNumToString))
         );
+        */
 
         // println!("{:?}", globals);
 

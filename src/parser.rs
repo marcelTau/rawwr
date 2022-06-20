@@ -543,6 +543,12 @@ impl Parser {
             })));
         }
 
+        if match_token!(self, This) {
+            return Ok(Expr::This(Rc::new(ThisExpr {
+                keyword: self.previous(),
+            })));
+        }
+
         if match_token!(self, Identifier) {
             return Ok(Expr::Variable(Rc::new(VariableExpr {
                 name: self.previous(),

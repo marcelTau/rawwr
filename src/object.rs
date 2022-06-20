@@ -1,16 +1,17 @@
 use core::fmt;
 use std::rc::Rc;
 
-use crate::callable::Callable;
+//use crate::callable::Callable;
 use crate::instance::Instance;
 use crate::class::*;
+use crate::function::*;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Object {
     Num(f64),
     Str(String),
     Bool(bool),
-    Func(Callable),
+    Func(Rc<Function>),
     Class(Rc<Class>),
     Instance(Rc<Instance>),
     Nil,

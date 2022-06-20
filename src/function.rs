@@ -1,13 +1,13 @@
 use core::fmt;
-use std::rc::Rc;
 use std::cell::RefCell;
+use std::rc::Rc;
 
 use crate::callable::*;
+use crate::environment::*;
 use crate::error::*;
-use crate::stmt::*;
 use crate::interpreter::*;
 use crate::object::*;
-use crate::environment::*;
+use crate::stmt::*;
 use crate::token::*;
 
 pub struct Function {
@@ -26,6 +26,34 @@ impl Function {
             closure: Rc::clone(closure),
         }
     }
+
+    pub fn bind() {}
+}
+
+impl fmt::Debug for Function {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.to_string())
+    }
+}
+
+impl Clone for Function {
+    fn clone(&self) -> Self {
+        Self {
+            name: self.name.clone(),
+            params: Rc::clone(&self.params),
+            body: Rc::clone(&self.body),
+            closure: Rc::clone(&self.closure),
+        }
+    }
+}
+
+impl PartialEq for Function {
+    fn eq(&self, other: &Self) -> bool {
+        self.name.token_type == other.name.token_type
+            && Rc::ptr_eq(&self.params, &other.params)
+            && Rc::ptr_eq(&self.body, &other.body)
+            && Rc::ptr_eq(&self.closure, &other.closure)
+    }
 }
 
 impl LoxCallable for Function {
@@ -35,7 +63,7 @@ impl LoxCallable for Function {
         for (param, arg) in self.params.iter().zip(arguments.iter()) {
             env.define(param.lexeme.as_str(), arg.clone());
         }
-        
+
         match interpreter.execute_block(&self.body, env) {
             Err(LoxResult::ReturnValue { value }) => Ok(value),
             Err(e) => Err(e),
@@ -53,4 +81,3 @@ impl fmt::Display for Function {
         write!(f, "<fn {}>", self.name.lexeme)
     }
 }
-

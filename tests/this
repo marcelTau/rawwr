@@ -1,0 +1,14 @@
+class Foo {
+    foo() {
+        var ending = "!!!!";
+        print this.bar + ":" + this.baz + ending;
+    }
+}
+
+var f = Foo();
+
+f.bar = "baz";
+f.baz = "bar";
+f.foo();
+
+print "Done!";

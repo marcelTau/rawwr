@@ -150,6 +150,7 @@ fn main() -> Result<(), std::io::Error> {
         "Literal  : Option<Object> value".to_string(),
         "Logical  : Rc<Expr> left, Token operator, Rc<Expr> right".to_string(),
         "Set      : Rc<Expr> object, Token name, Rc<Expr> value".to_string(),
+        "This     : Token keyword".to_string(),
         "Unary    : Token operator, Rc<Expr> right".to_string(),
         "Variable : Token name".to_string(),
     ])?;
