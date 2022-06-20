@@ -9,11 +9,17 @@ use crate::interpreter::*;
 use crate::stmt::*;
 use crate::token::*;
 
-#[derive(Eq, PartialEq)]
+#[derive(PartialEq)]
 enum FunctionType {
     None,
     Function,
     Method,
+}
+
+#[derive(PartialEq)]
+enum ClassType {
+    None,
+    Class,
 }
 
 pub struct Resolver<'a> {
@@ -21,10 +27,12 @@ pub struct Resolver<'a> {
     scopes: RefCell<Vec<HashMap<String, bool>>>,
     had_error: RefCell<bool>,
     current_function: RefCell<FunctionType>,
+    current_class: RefCell<ClassType>,
 }
 
 impl<'a> StmtVisitor<()> for Resolver<'a> {
     fn visit_class_stmt(&self, _: Rc<Stmt>, stmt: &ClassStmt) -> Result<(), LoxResult> {
+        let enclosing_class = self.current_class.replace(ClassType::Class);
         self.declare(&stmt.name);
         self.define(&stmt.name);
 
@@ -40,6 +48,7 @@ impl<'a> StmtVisitor<()> for Resolver<'a> {
         }
 
         self.end_scope();
+        self.current_class.replace(enclosing_class);
         Ok(())
     }
 
@@ -112,6 +121,7 @@ impl<'a> Resolver<'a> {
             scopes: RefCell::new(Vec::new()),
             had_error: RefCell::new(false),
             current_function: RefCell::new(FunctionType::None),
+            current_class: RefCell::new(ClassType::None),
         }
     }
 
@@ -192,6 +202,9 @@ impl<'a> Resolver<'a> {
 
 impl<'a> ExprVisitor<()> for Resolver<'a> {
     fn visit_this_expr(&self, wrapper: Rc<Expr>, expr: &ThisExpr) -> Result<(), LoxResult> {
+        if *self.current_class.borrow() == ClassType::None {
+            self.error(&expr.keyword, "Can't use 'this' outside of a class.");
+        }
         self.resolve_local(wrapper, &expr.keyword);
         Ok(())
     }

@@ -47,7 +47,7 @@ impl Environment {
         } else if let Some(enclosing) = &self.enclosing {
             enclosing.borrow().get(name)
         } else {
-            let err_msg = format!("GET: Undefined variable '{}'.", &name.lexeme);
+            let err_msg = format!("Undefined variable '{}'.", &name.lexeme);
             Err(LoxResult::runtime_error(name, &err_msg))
         }
     }
@@ -70,7 +70,7 @@ impl Environment {
         } else {
             Err(LoxResult::runtime_error(
                 name,
-                &format!("ASSIGN: Undefined variable '{}'.", &name.lexeme),
+                &format!("Undefined variable '{}'.", &name.lexeme),
             ))
         }
     }
