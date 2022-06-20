@@ -22,14 +22,14 @@ impl Instance {
         }
     }
 
-    pub fn get(&self, name: &Token) -> Result<Object, LoxResult> {
+    pub fn get(&self, name: &Token, this: &Rc<Instance>) -> Result<Object, LoxResult> {
         if let Entry::Occupied(o) = self.fields.borrow_mut().entry(name.lexeme.clone()) {
             Ok(o.get().clone())
         } else if let Some(method) = self.klass.find_method(name.lexeme.clone()) {
-            if let Object::Func(f) = method {
-                todo!();
+            if let Object::Func(func) = method {
+                Ok(func.bind(&Object::Instance(Rc::clone(this))))
             } else {
-                todo!();
+                Err(LoxResult::runtime_error(name, "'this' is defined on a non-function"))
             }
         } else {
             Err(LoxResult::runtime_error(

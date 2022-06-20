@@ -27,12 +27,22 @@ impl Function {
         }
     }
 
-    pub fn bind() {}
+    pub fn bind(&self, instance: &Object) -> Object {
+        let mut env = Environment::new_with_enclosing(Rc::clone(&self.closure));
+        env.define("this", instance.clone());
+
+        Object::Func(Rc::new(Self {
+            name: self.name.clone(),
+            params: Rc::clone(&self.params),
+            body: Rc::clone(&self.body),
+            closure: Rc::new(RefCell::new(env))
+        }))
+    }
 }
 
 impl fmt::Debug for Function {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.to_string())
+        write!(f, "{}", self)
     }
 }
 

@@ -4,7 +4,7 @@ use crate::callable::*;
 use crate::object::Object;
 use crate::interpreter::Interpreter;
 use crate::error::*;
-use crate::function::*;
+//use crate::function::*;
 
 pub struct NativeClock;
 

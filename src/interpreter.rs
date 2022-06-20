@@ -8,7 +8,7 @@ use crate::environment::*;
 use crate::error::*;
 use crate::expr::*;
 use crate::function::*;
-use crate::native_functions::*;
+//use crate::native_functions::*;
 use crate::object::Object;
 use crate::stmt::*;
 use crate::token::*;
@@ -106,7 +106,7 @@ impl StmtVisitor<()> for Interpreter {
 
 impl ExprVisitor<Object> for Interpreter {
     fn visit_this_expr(&self, wrapper: Rc<Expr>, expr: &ThisExpr) -> Result<Object, LoxResult> {
-        unimplemented!()
+        self.lookup_variable(&expr.keyword, wrapper)
     }
     fn visit_set_expr(&self, wrapper: Rc<Expr>, expr: &SetExpr) -> Result<Object, LoxResult> {
         let object = self.evaluate(expr.object.clone())?;
@@ -122,8 +122,8 @@ impl ExprVisitor<Object> for Interpreter {
 
     fn visit_get_expr(&self, _: Rc<Expr>, expr: &GetExpr) -> Result<Object, LoxResult> {
         let object = self.evaluate(expr.object.clone())?;
-        if let Object::Instance(o) = object {
-            o.get(&expr.name)
+        if let Object::Instance(inst) = object {
+            inst.get(&expr.name, &inst)
         } else {
             Err(LoxResult::runtime_error(&expr.name, "Only instances have properties."))
         }
