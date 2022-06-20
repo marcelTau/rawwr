@@ -42,7 +42,7 @@ impl Function {
             params: Rc::clone(&self.params),
             body: Rc::clone(&self.body),
             closure: Rc::new(RefCell::new(env)),
-            is_initializer: self.is_initializer.clone(),
+            is_initializer: self.is_initializer,
         }))
     }
 }
@@ -60,7 +60,7 @@ impl Clone for Function {
             params: Rc::clone(&self.params),
             body: Rc::clone(&self.body),
             closure: Rc::clone(&self.closure),
-            is_initializer: self.is_initializer.clone(),
+            is_initializer: self.is_initializer,
         }
     }
 }
